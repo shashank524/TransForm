@@ -1,0 +1,463 @@
+{
+  "n_queries": 50,
+  "median_ms": 2.2431254910770804,
+  "p95_ms": 32.207065119291656,
+  "min_ms": 0.7509589777328074,
+  "max_ms": 42.35725000035018,
+  "rows_per_chunk": 8192,
+  "parquet_compression": "snappy",
+  "parquet_encoding_strategy": "default",
+  "arrow_ipc_compression": "none",
+  "per_query": [
+    {
+      "result_id": "b297da97-33db-4f64-99d5-5aaf834b9146",
+      "elapsed_ms": 0.8311670389957726,
+      "n_rows": 1,
+      "n_cols": 1,
+      "json_bytes": 32,
+      "parquet_bytes": 1200,
+      "arrow_ipc_bytes": 1106
+    },
+    {
+      "result_id": "233d545f-b778-480c-87f6-96899f6dab58",
+      "elapsed_ms": 0.7509589777328074,
+      "n_rows": 1,
+      "n_cols": 1,
+      "json_bytes": 23,
+      "parquet_bytes": 1236,
+      "arrow_ipc_bytes": 1138
+    },
+    {
+      "result_id": "ccdbff8c-c0be-4268-80dd-c16dabb06d13",
+      "elapsed_ms": 0.8147089974954724,
+      "n_rows": 1,
+      "n_cols": 1,
+      "json_bytes": 49,
+      "parquet_bytes": 1348,
+      "arrow_ipc_bytes": 1218
+    },
+    {
+      "result_id": "27f1e231-47b7-422e-a723-25508da65b42",
+      "elapsed_ms": 0.7699590059928596,
+      "n_rows": 1,
+      "n_cols": 1,
+      "json_bytes": 119,
+      "parquet_bytes": 1960,
+      "arrow_ipc_bytes": 1682
+    },
+    {
+      "result_id": "f33a9ded-98c0-4e2c-aae3-258e82eeecd4",
+      "elapsed_ms": 1.1878329678438604,
+      "n_rows": 1,
+      "n_cols": 1,
+      "json_bytes": 35,
+      "parquet_bytes": 1263,
+      "arrow_ipc_bytes": 1218
+    },
+    {
+      "result_id": "6618568d-508a-4566-8566-3f5d022983e6",
+      "elapsed_ms": 0.9237089543603361,
+      "n_rows": 1,
+      "n_cols": 1,
+      "json_bytes": 33,
+      "parquet_bytes": 1251,
+      "arrow_ipc_bytes": 1218
+    },
+    {
+      "result_id": "a5c4ebf9-7f0e-4082-84d2-33a599f508e8",
+      "elapsed_ms": 1.1829999857582152,
+      "n_rows": 1,
+      "n_cols": 3,
+      "json_bytes": 555,
+      "parquet_bytes": 6266,
+      "arrow_ipc_bytes": 4834
+    },
+    {
+      "result_id": "90aa3ddb-f2c4-4bb5-99a1-5c128b6b1ba5",
+      "elapsed_ms": 1.1131250066682696,
+      "n_rows": 1,
+      "n_cols": 3,
+      "json_bytes": 802,
+      "parquet_bytes": 8014,
+      "arrow_ipc_bytes": 6146
+    },
+    {
+      "result_id": "63bfdf3f-61e9-4c57-92e6-47621b94a110",
+      "elapsed_ms": 0.7626250153407454,
+      "n_rows": 1,
+      "n_cols": 1,
+      "json_bytes": 31,
+      "parquet_bytes": 1284,
+      "arrow_ipc_bytes": 1170
+    },
+    {
+      "result_id": "2ea403cc-a6ea-465e-9363-de5ba8d12d0e",
+      "elapsed_ms": 0.9250000002793968,
+      "n_rows": 1,
+      "n_cols": 1,
+      "json_bytes": 76,
+      "parquet_bytes": 1680,
+      "arrow_ipc_bytes": 1474
+    },
+    {
+      "result_id": "014fc050-f870-49e8-8611-a24bb7f20f36",
+      "elapsed_ms": 0.8981669670902193,
+      "n_rows": 1,
+      "n_cols": 1,
+      "json_bytes": 58,
+      "parquet_bytes": 1524,
+      "arrow_ipc_bytes": 1362
+    },
+    {
+      "result_id": "ec1e31da-a34a-4cb0-a4f1-57f46d23c260",
+      "elapsed_ms": 1.3360410230234265,
+      "n_rows": 1,
+      "n_cols": 1,
+      "json_bytes": 106,
+      "parquet_bytes": 1816,
+      "arrow_ipc_bytes": 1570
+    },
+    {
+      "result_id": "ef7d2af4-32e1-42fd-8602-44645e934f1a",
+      "elapsed_ms": 0.8341670036315918,
+      "n_rows": 1,
+      "n_cols": 1,
+      "json_bytes": 101,
+      "parquet_bytes": 1772,
+      "arrow_ipc_bytes": 1538
+    },
+    {
+      "result_id": "6526c362-8952-4065-8c98-f48a016db894",
+      "elapsed_ms": 42.35725000035018,
+      "n_rows": 1,
+      "n_cols": 1,
+      "json_bytes": 35,
+      "parquet_bytes": 1284,
+      "arrow_ipc_bytes": 1170
+    },
+    {
+      "result_id": "e2f2aa9b-0b2a-4e35-b75b-f4c6c7211be3",
+      "elapsed_ms": 42.16891701798886,
+      "n_rows": 976,
+      "n_cols": 1,
+      "json_bytes": 27379,
+      "parquet_bytes": 2138,
+      "arrow_ipc_bytes": 15498
+    },
+    {
+      "result_id": "01e2cad1-e7f3-4fab-b587-202b60233d35",
+      "elapsed_ms": 6.616249971557409,
+      "n_rows": 2,
+      "n_cols": 1,
+      "json_bytes": 40,
+      "parquet_bytes": 1145,
+      "arrow_ipc_bytes": 1130
+    },
+    {
+      "result_id": "2d947791-5909-470f-a6bc-c524bc2e85f0",
+      "elapsed_ms": 1.772457966580987,
+      "n_rows": 1,
+      "n_cols": 1,
+      "json_bytes": 20,
+      "parquet_bytes": 1228,
+      "arrow_ipc_bytes": 1138
+    },
+    {
+      "result_id": "3fcf6df8-ecd6-46f2-ac03-ae10c411e73a",
+      "elapsed_ms": 4.105917003471404,
+      "n_rows": 21,
+      "n_cols": 1,
+      "json_bytes": 683,
+      "parquet_bytes": 1481,
+      "arrow_ipc_bytes": 1522
+    },
+    {
+      "result_id": "eb94dd3a-f66b-4e0c-9669-d6ede144fc3c",
+      "elapsed_ms": 3.7104589864611626,
+      "n_rows": 2,
+      "n_cols": 1,
+      "json_bytes": 44,
+      "parquet_bytes": 1163,
+      "arrow_ipc_bytes": 1138
+    },
+    {
+      "result_id": "6fe3d264-b4a0-429c-992b-90cb23bd1399",
+      "elapsed_ms": 3.2134580542333424,
+      "n_rows": 1,
+      "n_cols": 1,
+      "json_bytes": 34,
+      "parquet_bytes": 1340,
+      "arrow_ipc_bytes": 1218
+    },
+    {
+      "result_id": "0fe19961-6041-42e1-b45e-257e5314aef5",
+      "elapsed_ms": 4.7904999810270965,
+      "n_rows": 1,
+      "n_cols": 1,
+      "json_bytes": 21,
+      "parquet_bytes": 1152,
+      "arrow_ipc_bytes": 1138
+    },
+    {
+      "result_id": "7c0d7a97-e27b-4416-9ac8-aac3d85ae959",
+      "elapsed_ms": 4.388209024909884,
+      "n_rows": 1,
+      "n_cols": 1,
+      "json_bytes": 20,
+      "parquet_bytes": 1136,
+      "arrow_ipc_bytes": 1122
+    },
+    {
+      "result_id": "e6b6cc03-4c96-435c-bc9f-b2e5f742d1aa",
+      "elapsed_ms": 3.882999997586012,
+      "n_rows": 1,
+      "n_cols": 1,
+      "json_bytes": 33,
+      "parquet_bytes": 1340,
+      "arrow_ipc_bytes": 1218
+    },
+    {
+      "result_id": "b1e0ce67-1de2-4ef5-9322-e1f85ddbf0be",
+      "elapsed_ms": 2.9365409864112735,
+      "n_rows": 1,
+      "n_cols": 1,
+      "json_bytes": 20,
+      "parquet_bytes": 1136,
+      "arrow_ipc_bytes": 1122
+    },
+    {
+      "result_id": "099ac4b9-4bef-4198-b58e-5ff84a320dd0",
+      "elapsed_ms": 1.6123329987749457,
+      "n_rows": 1,
+      "n_cols": 1,
+      "json_bytes": 105,
+      "parquet_bytes": 1792,
+      "arrow_ipc_bytes": 1554
+    },
+    {
+      "result_id": "b827b674-f8d0-4570-a385-a646330ebc80",
+      "elapsed_ms": 23.415000003296882,
+      "n_rows": 1,
+      "n_cols": 1,
+      "json_bytes": 201,
+      "parquet_bytes": 2558,
+      "arrow_ipc_bytes": 2138
+    },
+    {
+      "result_id": "5562ea08-5c8a-4a5d-82e4-0418de5a8d08",
+      "elapsed_ms": 7.081582967657596,
+      "n_rows": 1,
+      "n_cols": 1,
+      "json_bytes": 135,
+      "parquet_bytes": 2044,
+      "arrow_ipc_bytes": 1746
+    },
+    {
+      "result_id": "325e0b9a-9787-4c69-b942-287b0661c416",
+      "elapsed_ms": 24.05645902035758,
+      "n_rows": 1,
+      "n_cols": 2,
+      "json_bytes": 83,
+      "parquet_bytes": 2102,
+      "arrow_ipc_bytes": 1754
+    },
+    {
+      "result_id": "7d25c6c0-5df4-475c-b5d9-1d5ae619f9d7",
+      "elapsed_ms": 3.093291015829891,
+      "n_rows": 1,
+      "n_cols": 3,
+      "json_bytes": 90,
+      "parquet_bytes": 2453,
+      "arrow_ipc_bytes": 2066
+    },
+    {
+      "result_id": "ea7b35a3-82fe-48e7-b775-dd7d4d80d3f5",
+      "elapsed_ms": 2.98941700020805,
+      "n_rows": 10,
+      "n_cols": 1,
+      "json_bytes": 261,
+      "parquet_bytes": 1325,
+      "arrow_ipc_bytes": 1226
+    },
+    {
+      "result_id": "80073434-840e-467f-82ee-891d4ea9a998",
+      "elapsed_ms": 3.1262909760698676,
+      "n_rows": 1,
+      "n_cols": 1,
+      "json_bytes": 28,
+      "parquet_bytes": 1195,
+      "arrow_ipc_bytes": 1154
+    },
+    {
+      "result_id": "5f2761f4-6af5-4e61-86de-49959e3f196f",
+      "elapsed_ms": 2.84754199674353,
+      "n_rows": 1,
+      "n_cols": 1,
+      "json_bytes": 27,
+      "parquet_bytes": 1300,
+      "arrow_ipc_bytes": 1186
+    },
+    {
+      "result_id": "bfe1e3b3-5247-4fef-a7f1-7216e43a3c49",
+      "elapsed_ms": 12.581666000187397,
+      "n_rows": 9,
+      "n_cols": 1,
+      "json_bytes": 307,
+      "parquet_bytes": 1374,
+      "arrow_ipc_bytes": 1338
+    },
+    {
+      "result_id": "67fb53c7-3383-4a0c-9e13-5c7923a0db95",
+      "elapsed_ms": 2.8096670284867287,
+      "n_rows": 8,
+      "n_cols": 1,
+      "json_bytes": 282,
+      "parquet_bytes": 1317,
+      "arrow_ipc_bytes": 1330
+    },
+    {
+      "result_id": "7953baea-4526-4a96-bd70-07f2c60ebe21",
+      "elapsed_ms": 1.9299169653095305,
+      "n_rows": 1,
+      "n_cols": 1,
+      "json_bytes": 16,
+      "parquet_bytes": 1208,
+      "arrow_ipc_bytes": 1122
+    },
+    {
+      "result_id": "c1d4a597-a0b9-4e3a-a3e7-5fbaf2504a82",
+      "elapsed_ms": 2.6120420079678297,
+      "n_rows": 3,
+      "n_cols": 2,
+      "json_bytes": 147,
+      "parquet_bytes": 1748,
+      "arrow_ipc_bytes": 1626
+    },
+    {
+      "result_id": "90c4207c-b112-465b-bd06-730874b47694",
+      "elapsed_ms": 2.302125038113445,
+      "n_rows": 3,
+      "n_cols": 1,
+      "json_bytes": 66,
+      "parquet_bytes": 1159,
+      "arrow_ipc_bytes": 1162
+    },
+    {
+      "result_id": "f0aa667e-cb8c-4f71-aa4e-fd2e0f6f01f3",
+      "elapsed_ms": 1.6564169782213867,
+      "n_rows": 1,
+      "n_cols": 1,
+      "json_bytes": 27,
+      "parquet_bytes": 1260,
+      "arrow_ipc_bytes": 1154
+    },
+    {
+      "result_id": "d585d04f-495e-403a-b1c2-f474f9472fe8",
+      "elapsed_ms": 2.478583948686719,
+      "n_rows": 1,
+      "n_cols": 1,
+      "json_bytes": 18,
+      "parquet_bytes": 1192,
+      "arrow_ipc_bytes": 1106
+    },
+    {
+      "result_id": "fc1b3eff-182a-4e6e-b050-132611e562eb",
+      "elapsed_ms": 2.0073329797014594,
+      "n_rows": 1,
+      "n_cols": 1,
+      "json_bytes": 63,
+      "parquet_bytes": 1356,
+      "arrow_ipc_bytes": 1162
+    },
+    {
+      "result_id": "9cc98ade-eca6-49ca-ac35-1028607054c1",
+      "elapsed_ms": 1.4063330017961562,
+      "n_rows": 1,
+      "n_cols": 1,
+      "json_bytes": 27,
+      "parquet_bytes": 1175,
+      "arrow_ipc_bytes": 1130
+    },
+    {
+      "result_id": "cb67f92e-2933-47f8-b461-bbe4613d3a93",
+      "elapsed_ms": 1.422917004674673,
+      "n_rows": 1,
+      "n_cols": 1,
+      "json_bytes": 28,
+      "parquet_bytes": 1205,
+      "arrow_ipc_bytes": 1170
+    },
+    {
+      "result_id": "e7090da7-a15e-4cab-99eb-7596aa8ce571",
+      "elapsed_ms": 1.8581249751150608,
+      "n_rows": 1,
+      "n_cols": 1,
+      "json_bytes": 38,
+      "parquet_bytes": 1245,
+      "arrow_ipc_bytes": 1170
+    },
+    {
+      "result_id": "69e5a2a1-2bb0-409e-97d4-2bd9982d4d60",
+      "elapsed_ms": 2.4883339647203684,
+      "n_rows": 1,
+      "n_cols": 1,
+      "json_bytes": 28,
+      "parquet_bytes": 1316,
+      "arrow_ipc_bytes": 1202
+    },
+    {
+      "result_id": "3acbb1d5-06d3-4b9f-842c-703ae82ff14d",
+      "elapsed_ms": 1.185791043099016,
+      "n_rows": 1,
+      "n_cols": 1,
+      "json_bytes": 40,
+      "parquet_bytes": 1255,
+      "arrow_ipc_bytes": 1170
+    },
+    {
+      "result_id": "1963a300-3684-4c30-b8b2-1f726cf0375d",
+      "elapsed_ms": 2.1397920208983123,
+      "n_rows": 2,
+      "n_cols": 1,
+      "json_bytes": 66,
+      "parquet_bytes": 1243,
+      "arrow_ipc_bytes": 1194
+    },
+    {
+      "result_id": "b14b8482-ab85-4c41-884d-0eb7a51f4fbb",
+      "elapsed_ms": 1.946957956533879,
+      "n_rows": 1,
+      "n_cols": 1,
+      "json_bytes": 189,
+      "parquet_bytes": 2478,
+      "arrow_ipc_bytes": 2066
+    },
+    {
+      "result_id": "bccc31e5-1d0a-4e05-8ae1-85ad89de50c7",
+      "elapsed_ms": 2.25816696183756,
+      "n_rows": 1,
+      "n_cols": 1,
+      "json_bytes": 23,
+      "parquet_bytes": 1236,
+      "arrow_ipc_bytes": 1138
+    },
+    {
+      "result_id": "18e6d5e8-b923-43b1-a0b7-6b817923d691",
+      "elapsed_ms": 2.319375053048134,
+      "n_rows": 1,
+      "n_cols": 1,
+      "json_bytes": 20,
+      "parquet_bytes": 1252,
+      "arrow_ipc_bytes": 1154
+    },
+    {
+      "result_id": "806551cd-7e8e-402e-b04d-7f0bfdd99263",
+      "elapsed_ms": 2.228084020316601,
+      "n_rows": 1,
+      "n_cols": 1,
+      "json_bytes": 42,
+      "parquet_bytes": 1265,
+      "arrow_ipc_bytes": 1170
+    }
+  ]
+}

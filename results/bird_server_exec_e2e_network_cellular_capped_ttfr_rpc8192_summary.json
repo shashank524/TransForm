@@ -1,0 +1,71 @@
+{
+  "run_header": {
+    "type": "bird_server_exec_e2e_run_header",
+    "format_select_target": "min_time_to_first_rows",
+    "max_queries": 0,
+    "mcp_url": "http://server:8000/mcp/mcp",
+    "server_url": "http://server:8000",
+    "bird_questions": "dev.json",
+    "max_rows": 500000,
+    "rows_per_chunk": 8192,
+    "prefer_streaming": true,
+    "PARQUET_ENCODING_STRATEGY": "data_driven",
+    "PARQUET_COMPRESSION": "snappy",
+    "ARROW_IPC_COMPRESSION": "none",
+    "network": {
+      "net_profile": "Cellular",
+      "tc_dev": "eth0",
+      "tc_delay": "80ms",
+      "tc_rate": "10mbit",
+      "tc_loss": "0.1%"
+    }
+  },
+  "total_records": 1534,
+  "baseline_ok": 1534,
+  "baseline_failed": 0,
+  "baseline_failed_rate": 0.0,
+  "median_baseline_s": 0.10240920849901158,
+  "p95_baseline_s": 0.8245174999756273,
+  "median_client_total_s": 0.30401295848423615,
+  "p95_client_total_s": 0.8066262079810258,
+  "median_server_auto_total_s": 0.11455210400163196,
+  "p95_server_auto_total_s": 0.6905790010059718,
+  "median_baseline_bytes": 57.0,
+  "median_client_bytes": 50.0,
+  "median_server_auto_bytes": 38.0,
+  "median_ratio_baseline_over_client_latency": 0.3402315660818026,
+  "median_ratio_baseline_over_auto_latency": 0.9319072823023175,
+  "median_ratio_baseline_over_client_bytes": 1.0,
+  "median_ratio_baseline_over_auto_bytes": 1.3157894736842106,
+  "median_client_ttfr_s": null,
+  "p95_client_ttfr_s": null,
+  "median_server_auto_ttfr_s": null,
+  "p95_server_auto_ttfr_s": null,
+  "baseline_failure_by_cells_bucket": {
+    "1-1e4": {
+      "total": 1509,
+      "baseline_failed": 0
+    },
+    "1e4-1e5": {
+      "total": 19,
+      "baseline_failed": 0
+    },
+    "1e5-1e6": {
+      "total": 2,
+      "baseline_failed": 0
+    },
+    "0": {
+      "total": 4,
+      "baseline_failed": 0
+    }
+  },
+  "client_chosen_format_counts": {
+    "json": 1364
+  },
+  "server_auto_chosen_format_counts": {
+    "json": 1364,
+    "parquet_blob": 160,
+    "arrow_ipc_blob": 1,
+    "parquet_stream": 5
+  }
+}

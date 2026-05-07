@@ -1,0 +1,27 @@
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+
+# Datasets / large inputs
+data/datasets/
+data/materialized/
+data/materialized_raw/
+data/raw/
+data/*.parquet
+*.zip
+*.parquet
+
+# Generated benchmark artifacts (parquet blobs and large profiles)
+results/format_mab_state.json
+results/format_selection_history.jsonl
+results/materialized/
+results/profiling/**/*.html
+results/profiling/**/*.speedscope.json
+results/format_hints.sqlite*
+
+# Editor / OS noise
+.idea/
+.vscode/
+*.swp

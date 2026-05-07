@@ -1,0 +1,42 @@
+
+  _     ._   __/__   _ _  _  _ _/_   Recorded: 18:15:48  Samples:  933
+ /_//_/// /_\ / //_// / //_'/ //     Duration: 2.369     CPU time: 0.894
+/   _/                      v5.1.2
+
+Profile at /Users/shashank/Documents/ChunweiLiuPapers/MultiModalMCP/bench_bird_e2e.py:758
+
+2.3692 main  bench_bird_e2e.py:688
+└─ 2.3687 run  asyncio/runners.py:160
+   └─ 2.3687 Runner.run  asyncio/runners.py:86
+      └─ 2.3687 _UnixSelectorEventLoop.run_until_complete  asyncio/base_events.py:689
+         └─ 2.3687 _UnixSelectorEventLoop.run_forever  asyncio/base_events.py:678
+            └─ 2.3677 _UnixSelectorEventLoop._run_once  asyncio/base_events.py:1970
+               ├─ 1.1980 Handle._run  asyncio/events.py:87
+               │  ├─ 1.0451 run_bench  bench_bird_e2e.py:616
+               │  │  ├─ 0.9960 run_one  bench_bird_e2e.py:461
+               │  │  │  ├─ 0.7903 execute_sql_sqlite  bench_nl2sql_materialized.py:140
+               │  │  │  │  └─ 0.7714 read_sql_query  pandas/io/sql.py:402
+               │  │  │  │        [2 frames hidden]  pandas
+               │  │  │  │           0.7436 Cursor.execute  <built-in>
+               │  │  │  ├─ 0.1281 register_materialized  client/mcp_client.py:404
+               │  │  │  │  └─ 0.1266 AsyncClient.post  httpx/_client.py:1838
+               │  │  │  │        [16 frames hidden]  httpx, httpcore
+               │  │  │  └─ 0.0605 df_to_parquet_bytes  bench_nl2sql_materialized.py:190
+               │  │  │     └─ 0.0280 dedupe_duplicate_columns  bench_nl2sql_materialized.py:170
+               │  │  │        └─ 0.0265 DataFrame.__setattr__  pandas/core/generic.py:6208
+               │  │  │              [4 frames hidden]  pandas
+               │  │  └─ 0.0292 _AsyncGeneratorContextManager.__aenter__  contextlib.py:209
+               │  │     └─ 0.0292 connect  client/mcp_client.py:49
+               │  │        └─ 0.0248 _AsyncGeneratorContextManager.__aenter__  contextlib.py:209
+               │  │           └─ 0.0248 streamable_http_client  mcp/client/streamable_http.py:501
+               │  └─ 0.1292 handle_request_async  mcp/client/streamable_http.py:458
+               │     └─ 0.1287 StreamableHTTPTransport._handle_post_request  mcp/client/streamable_http.py:245
+               │        ├─ 0.0789 _AsyncGeneratorContextManager.__aenter__  contextlib.py:209
+               │        │  └─ 0.0783 AsyncClient.stream  httpx/_client.py:1542
+               │        │        [7 frames hidden]  httpx, httpcore
+               │        └─ 0.0478 StreamableHTTPTransport._handle_json_response  mcp/client/streamable_http.py:284
+               │           └─ 0.0416 Response.aread  httpx/_models.py:974
+               │                 [2 frames hidden]  httpx
+               └─ 1.1590 KqueueSelector.select  selectors.py:540
+                  └─ 1.1513 kqueue.control  <built-in>
+

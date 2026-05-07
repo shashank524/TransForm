@@ -1,0 +1,20 @@
+name: multimodal-mcp
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - numpy
+  - pandas
+  - pyarrow
+  - matplotlib
+  - seaborn
+  - duckdb
+  - uvicorn
+  - starlette
+  - cryptography
+  - pip:
+      - "mcp[cli]"
+      - httpx
+      - python-magic
+      - PyJWT

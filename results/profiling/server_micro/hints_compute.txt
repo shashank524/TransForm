@@ -1,0 +1,26 @@
+
+  _     ._   __/__   _ _  _  _ _/_   Recorded: 17:45:25  Samples:  153
+ /_//_/// /_\ / //_// / //_'/ //     Duration: 0.144     CPU time: 0.077
+/   _/                      v5.1.2
+
+Profile at /Users/shashank/Documents/ChunweiLiuPapers/MultiModalMCP/profile_hints_compute.py:159
+
+0.1437 main  profile_hints_compute.py:93
+└─ 0.1432 _compute_tabular_size_hints  server_app.py:517
+   ├─ 0.1010 _resolve_dataframe  server_app.py:368
+   │  └─ 0.1005 _load_materialized_dataframe  server_app.py:356
+   │     └─ 0.1005 read_parquet  pandas/io/parquet.py:508
+   │           [20 frames hidden]  pyarrow, pandas, <frozen genericpath>...
+   │              0.0975 PyArrowImpl.read  pandas/io/parquet.py:240
+   │              │  0.0531 ParquetDataset.read  pyarrow/parquet/core.py:1487
+   │              └─ 0.0041 filterwarnings  warnings.py:131
+   │                 └─ 0.0041 _add_filter  warnings.py:188
+   ├─ 0.0177 DataFrame.to_dict  pandas/core/frame.py:2125
+   │     [18 frames hidden]  pandas
+   ├─ 0.0103 _encode_parquet  server_app.py:398
+   │  └─ 0.0093 write_table  pyarrow/parquet/core.py:1958
+   │        [2 frames hidden]  pyarrow
+   ├─ 0.0101 dataframe_to_arrays  pyarrow/pandas_compat.py:599
+   │     [14 frames hidden]  pyarrow, pandas, numpy
+   └─ 0.0021 [self]  server_app.py
+

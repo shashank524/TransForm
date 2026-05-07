@@ -1,0 +1,33 @@
+\label{sec:intro}
+
+AI agents are increasingly deployed as tool-using systems: they issue queries, call APIs, manipulate files, and iterate over intermediate results in plan--act--reflect loops. Model Context Protocol (MCP) is emerging as an interoperability layer for this ecosystem, standardizing a JSON-RPC control plane with primitives such as tools, resources, prompts, and notifications. MCP resembles a ``REST API for AI,'' but it is fundamentally message-oriented: tool inputs and outputs become part of the agent’s working memory and often flow through model context. As a result, the bottleneck for many tool-augmented workflows shifts from computation to \emph{data transmission} and \emph{representation} of tool outputs.
+
+\smallskip
+\noindent\textbf{Motivation: large structured tool outputs.}
+A common pattern is text-to-SQL and analytics tools that return tabular query results. In today’s MCP deployments, these results are frequently encoded directly as JSON objects (e.g., lists of records) and returned through the MCP control plane. JSON is convenient and widely supported, but it is structurally inefficient for tables: it repeats column names, inflates bytes, and forces clients (and models) to receive the entire payload before acting. In agentic workloads, this is particularly costly: agents often do not need the full table to proceed, and they benefit from time-to-first-rows and the ability to terminate early when confidence is sufficient.
+
+\smallskip
+\noindent\textbf{MCP layering and deployment realities.}
+MCP consists of (i) a \emph{data layer} that defines JSON-RPC lifecycle and core primitives, and (ii) a \emph{transport layer} that defines how messages flow (e.g., local STDIO vs.\ remote streamable HTTP). Local MCP servers that use STDIO typically serve a single client process, while remote MCP servers over streamable HTTP are designed to serve many clients and must account for authorization, payload limits, and fairness. These realities motivate a separation between the control plane (small JSON-RPC messages) and a data plane optimized for large artifacts.
+
+\smallskip
+\noindent\textbf{Our approach.}
+We present \system, a dynamic format selection framework for MCP tool outputs that separates \emph{control} from \emph{data}. Tools return a small \texttt{CallToolResult} envelope with (a) concise natural language and (b) structured descriptors describing how to fetch and decode large results. Large structured outputs are delivered on a streamable HTTP data plane using Parquet as a binary columnar representation, either as a whole blob or as a length-prefixed chunk stream. This design supports incremental client processing, bounded memory, and early termination; it also accommodates other encodings (e.g., Arrow IPC) and unstructured payloads.
+
+\smallskip
+\noindent\textbf{Format selection.}
+\system selects among output formats based on an explicit optimization target (min bytes, min latency, or min time-to-first-rows). Selection can be client-driven (using server-provided size hints) or server-driven (one-shot selection inside a single MCP tool), and it can be extended with online learning (multi-armed bandits) and codec/encoding choices within Parquet.
+
+\smallskip
+\noindent\textbf{Contributions.}
+This paper makes the following contributions:
+\begin{itemize}
+    \item \textbf{Control/data-plane split for MCP results.} We define a descriptor-based interface that keeps MCP JSON-RPC messages small while delivering large tabular payloads via a streamable HTTP data plane.
+    \item \textbf{Parquet blob and Parquet chunk streaming for tool outputs.} We implement both whole-blob delivery and incremental, length-prefixed chunk streaming to enable low time-to-first-rows and early termination.
+    \item \textbf{Dynamic format (and codec) selection.} We design a target-driven selector using size hints and optional network+decode proxies, and we support both client-side and one-shot server-side selection.
+    \item \textbf{Evaluation on controlled and real workloads.} We quantify size scaling on TPC-DS slices and measure payload and latency behavior on BIRD dev query results, demonstrating substantial reductions in aggregate wire volume versus JSON baselines.
+\end{itemize}
+
+\smallskip
+\noindent\textbf{Paper roadmap.}
+Section~\ref{sec:related} discusses related work. Section~\ref{sec:overview} presents \system’s architecture, protocols, and selectors. Section~\ref{sec:eval} evaluates payload and latency trade-offs on TPC-DS and BIRD. Section~\ref{sec:conclude} concludes with limitations and future directions.

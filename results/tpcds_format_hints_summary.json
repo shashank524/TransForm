@@ -1,0 +1,12 @@
+{
+  "n_slices": 9,
+  "median_ratio_json_over_parquet": 24.149371206618625,
+  "p95_ratio_json_over_parquet": 30.4242855085175,
+  "median_ratio_json_over_arrow_ipc": 3.195118711003162,
+  "median_ratio_parquet_over_arrow_ipc": 0.13230649707879247,
+  "decode_ns_per_byte": {
+    "json": 4.798903748210889,
+    "parquet_blob": 2.1649480231502274,
+    "arrow_ipc_blob": 0.004414778779602035
+  }
+}

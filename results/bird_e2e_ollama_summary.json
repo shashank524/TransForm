@@ -1,0 +1,49 @@
+{
+  "run_header": {
+    "type": "bird_e2e_run_header",
+    "sql_source": "ollama",
+    "frozen_sql": null,
+    "format_select_target": "min_latency",
+    "arms": "both",
+    "strict_exec": true,
+    "allow_gold_fallback": false,
+    "with_summary": false,
+    "mcp_url": "http://localhost:8000/mcp/mcp",
+    "server_url": "http://localhost:8000",
+    "bird_questions": "mini_dev_sqlite.json",
+    "max_queries": 25
+  },
+  "total_query_records": 25,
+  "exec_ok": 12,
+  "registration_ok": 12,
+  "transport_measured": 12,
+  "used_gold_sql_for_transport": 0,
+  "nl2sql_errors": 0,
+  "exec_failures_no_row": 13,
+  "frozen_sql_missing": 0,
+  "sql_source_counts": {
+    "ollama": 25
+  },
+  "recommended_format_counts": {
+    "json": 11,
+    "parquet_blob": 1
+  },
+  "median_nl2sql_s": 0.7894729590043426,
+  "p95_nl2sql_s": 3.357112458004849,
+  "median_baseline_fetch_s": 0.007175396000093315,
+  "p95_baseline_fetch_s": 0.01514933399448637,
+  "median_describe_s": 0.006185562007885892,
+  "median_enhanced_fetch_s": 0.006735520997608546,
+  "p95_enhanced_fetch_s": 0.007460209002601914,
+  "median_enhanced_total_s": 0.012733895498968195,
+  "median_baseline_bytes": 76.5,
+  "median_enhanced_bytes": 76.5,
+  "median_ratio_baseline_fetch_over_enhanced_fetch": 1.0904913546895991,
+  "median_ratio_baseline_bytes_over_enhanced_bytes": 1.0,
+  "median_summary_s": null,
+  "p95_summary_s": null,
+  "summary_examples": [],
+  "environment": {
+    "ollama_model": "(not set in summarize env)"
+  }
+}

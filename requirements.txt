@@ -1,0 +1,25 @@
+# MCP and server
+mcp[cli]
+uvicorn
+starlette
+httpx
+
+# Data and benchmark
+pyarrow
+pandas
+numpy
+matplotlib
+
+# Security and content handling
+python-magic
+PyJWT
+cryptography
+
+# Profiling (opt-in via PYINSTRUMENT_PROFILE=1)
+pyinstrument
+
+# Optional faster JSON-Schema validators for the python-sdk client/server
+# Auto-detected at import; preference chain is jsonschema-rs > fastjsonschema > jsonschema.
+# Override via MCP_VALIDATOR_BACKEND={auto|jsonschema|fastjsonschema|jsonschema-rs|skip}.
+fastjsonschema
+jsonschema-rs

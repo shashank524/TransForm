@@ -1,0 +1,18 @@
+\label{sec:related}
+
+This section summarizes related work on (i) MCP ecosystems and tool interoperability, (ii) agentic workloads and ``agent-first'' data systems, and (iii) data formats and adaptive representation/selection for tabular results.
+
+\subsection{MCP ecosystem and tool protocols}
+MCP standardizes how AI clients call tools and consume results through a JSON-RPC data layer and multiple transports. A recent measurement study of the MCP ecosystem highlights that MCP is already deployed at scale but remains heterogeneous and fragile, with many low-quality listings and an under-adoption of scalable transports in clients \cite{guoMcpEcosystemMeasurement}. These findings motivate systems-level work on robust, scalable handling of tool outputs and response formats. \system complements MCP’s control plane by introducing a tabular data plane for large structured results while remaining backward-compatible with JSON-only clients.
+
+\subsection{Agentic workloads and agent-first data systems}
+Recent work argues that LLM agents will become dominant ``users'' of data systems and that their workloads exhibit high throughput, redundancy, and a need for rapid iteration (``agentic speculation'') \cite{liuAgentFirstOverlords}. Industry perspectives similarly emphasize that agent success degrades sharply when latency increases beyond a few seconds and call for standards-based integration with existing data stacks \cite{fireboltAgentsWhitepaper}. Our work is orthogonal to query execution optimizations inside the database: we focus on the representation and delivery of tool results across the control/data boundary, which becomes a bottleneck as agents iterate.
+
+\subsection{Data formats for analytical systems}
+Columnar formats such as Parquet and Arrow are widely used for analytical workloads and interchange. A recent survey of data formats in analytical DBMSs characterizes trade-offs among Arrow, Parquet, and ORC, noting that Parquet typically provides strong compression and I/O efficiency while Arrow provides fast in-memory interchange \cite{liuDataFormatsVldbj2025}. We leverage these established trade-offs to motivate a Parquet-based data plane for large tabular tool outputs while treating Arrow IPC as a reference point when decode speed dominates.
+
+\subsection{Adaptive representation and efficiency of structured outputs}
+Several lines of work motivate going beyond ``always JSON''. Byte-level analyses show that text-based encodings can reduce redundancy for tabular structures compared to generic JSON \cite{toonVsJsonModel}. More broadly, adaptive, input-dependent selection among methods---including online explore/exploit policies---has been studied in the context of dynamic compression selection \cite{adaedge}. \system applies this lens to tool-result delivery: it selects among JSON, Parquet blob, and streaming formats based on explicit optimization targets and measurable hints, and it extends selection within Parquet via codec/encoding choices.
+
+\subsection{Table reasoning agents and tool-augmented execution}
+Strong table reasoning increasingly relies on programmatic backends and tool use, including code-generation loops that execute computations over tables \cite{tablemindWsdm2026}. These systems amplify the importance of efficient tool-result delivery: as agents issue many exploratory queries, the cost of transferring large intermediate tables can dominate end-to-end performance. \system provides a compatible substrate for such tool-augmented table workflows by optimizing how tabular results are delivered and consumed.

@@ -1,0 +1,58 @@
+\label{sec:overview}
+
+This section describes \system’s architecture and the mechanisms used to deliver large tool outputs efficiently while remaining compatible with MCP’s JSON-RPC control plane.
+
+\subsection{Background: MCP layers and deployment}
+MCP consists of two layers. The \textbf{data layer} defines the JSON-RPC protocol and lifecycle management, and the core primitives that clients and servers offer each other: tools (callable functions), resources (addressable data), prompts, and notifications. The \textbf{transport layer} defines the channel for exchanging JSON-RPC messages. In practice, MCP is deployed over either (i) a local STDIO transport, typically serving a single client, or (ii) a remote streamable HTTP transport, typically serving many clients. Streamable HTTP uses HTTP POST for client-to-server messages and may use Server-Sent Events (SSE) for streaming model-facing updates; it also provides a natural hook point for authorization and payload controls.
+
+\subsection{Control plane vs.\ data plane}
+\system addresses the mismatch between MCP’s control plane and large structured payloads by splitting responsibilities:
+\begin{itemize}
+    \item \textbf{Control plane (MCP JSON-RPC).} Tool calls return a small \texttt{CallToolResult} envelope containing: (i) a short natural-language summary suitable for UIs and models, and (ii) a machine-readable \emph{descriptor} that tells the client how to retrieve and decode the full payload.
+    \item \textbf{Data plane (HTTP).} Large payload bytes are delivered over HTTP endpoints as either a whole blob or a stream. This keeps MCP messages small, enables incremental consumption, and avoids pushing large tables into model context.
+\end{itemize}
+
+\subsection{Payload kinds and decode descriptors}
+\system treats outputs as one of two payload kinds:
+\begin{itemize}
+    \item \textbf{Tabular payloads}: data frames / result tables.
+    \item \textbf{Unstructured payloads}: text or arbitrary bytes (e.g., files, images, logs).
+\end{itemize}
+
+For tabular payloads, the descriptor returned in \texttt{structured\_content} specifies the chosen representation and how to decode it. Concretely, the descriptor includes a \texttt{decode} object with:
+\begin{itemize}
+    \item \textbf{\texttt{decode.transport}}: \texttt{inline} (no HTTP), \texttt{http\_blob} (download full object), or \texttt{http\_length\_prefixed\_stream} (consume a stream of chunks).
+    \item \textbf{\texttt{decode.encoding}}: \texttt{json\_records}, \texttt{parquet}, or \texttt{arrow\_ipc}.
+\end{itemize}
+Unstructured payloads follow the same pattern: small text may be returned inline, while large bytes are referenced by URL (optionally compressed).
+
+\subsection{Tabular formats}
+\system supports multiple arms for large tabular results:
+\begin{itemize}
+    \item \textbf{JSON records (baseline).} The result table is serialized as a list of JSON dictionaries. This is the default compatibility path for existing MCP clients and for small results.
+    \item \textbf{Parquet blob.} The result table is encoded as a single Parquet file and served via a \texttt{GET} endpoint. Parquet is typically the smallest on the wire due to columnar layout and compression.
+    \item \textbf{Parquet stream.} The result table is partitioned into row chunks (e.g., fixed rows-per-chunk). The server emits a length-prefixed byte stream so the client can fetch, decode, and process chunks incrementally. This optimizes time-to-first-rows and enables early termination.
+    \item \textbf{Arrow IPC (optional).} Arrow IPC can be used when client stacks benefit from fast in-memory interchange. In our evaluation we use Arrow IPC mainly as a reference point for decode-speed trade-offs.
+\end{itemize}
+
+\subsection{Format selection}
+\system chooses a representation based on an explicit \textbf{optimization target}:
+\texttt{min\_bytes}, \texttt{min\_latency}, or \texttt{min\_time\_to\_first\_rows} (TTFR). We support two selection placements.
+
+\smallskip
+\noindent\textbf{Workflow A (client-driven).}
+The client calls a hint tool (e.g., \texttt{describe\_result\_formats}) to obtain approximate byte sizes for candidate encodings (JSON, Parquet, Arrow IPC; plus first-chunk sizes for streaming). Given the hints and target, the client runs a deterministic selector to choose which tool variant to call (JSON vs.\ Parquet blob vs.\ stream).
+
+\smallskip
+\noindent\textbf{Server-side one-shot selection.}
+To remove the extra hint round-trip, the server can expose a single MCP tool (e.g., \texttt{large\_result\_auto}) that accepts an optimization target and returns a descriptor whose \texttt{chosen\_format} and \texttt{decode} fields fully specify the selected arm. Fetching bytes may still occur on the HTTP data plane, but no additional MCP call is required.
+
+\smallskip
+\noindent\textbf{Latency proxy model.}
+For \texttt{min\_latency}, selection can optionally incorporate a simple model that combines transfer time under an assumed bandwidth with a decode proxy measured as nanoseconds per byte (calibrated empirically on representative slices). This allows the selector to trade off Parquet’s smaller bytes against Arrow IPC’s faster decode in Arrow-native clients.
+
+\subsection{Codec and encoding selection within Parquet}
+Within the Parquet arms, \system can select compression codecs (e.g., Snappy, Zstd, Gzip) and optional column encodings based on a target-driven policy. While Parquet often minimizes wire bytes compared to JSON, codec choice further trades off size versus encode+decode time. Our evaluation includes a first pass at characterizing this Pareto frontier for TPC-DS-derived tables.
+
+\subsection{Implementation overview}
+We implement \system as a Python MCP server that serves both the JSON-RPC control plane and the HTTP data plane. For tabular results we use \texttt{pandas} for in-process materialization and \texttt{pyarrow} for Parquet (and Arrow IPC) encoding/decoding. The client benchmarks materialize SQL results locally (for BIRD), register them once, then compare baseline JSON transport to hint-aware selection and one-shot server-side selection on the same materialized result id.

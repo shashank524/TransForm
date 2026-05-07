@@ -1,0 +1,35 @@
+
+  _     ._   __/__   _ _  _  _ _/_   Recorded: 15:28:58  Samples:  1846
+ /_//_/// /_\ / //_// / //_'/ //     Duration: 4.366     CPU time: 1.269
+/   _/                      v5.1.2
+
+Profile at /Users/shashank/Documents/ChunweiLiuPapers/MultiModalMCP/bench_bird_e2e.py:758
+
+4.3656 main  bench_bird_e2e.py:688
+└─ 4.3656 run  asyncio/runners.py:160
+   └─ 4.3651 Runner.run  asyncio/runners.py:86
+      └─ 4.3651 _UnixSelectorEventLoop.run_until_complete  asyncio/base_events.py:689
+         └─ 4.3651 _UnixSelectorEventLoop.run_forever  asyncio/base_events.py:678
+            └─ 4.3631 _UnixSelectorEventLoop._run_once  asyncio/base_events.py:1970
+               ├─ 2.6034 KqueueSelector.select  selectors.py:540
+               │  └─ 2.5738 kqueue.control  <built-in>
+               └─ 1.7389 Handle._run  asyncio/events.py:87
+                  ├─ 1.2509 run_bench  bench_bird_e2e.py:616
+                  │  └─ 1.2006 run_one  bench_bird_e2e.py:461
+                  │     ├─ 0.9788 execute_sql_sqlite  bench_nl2sql_materialized.py:140
+                  │     │  └─ 0.9368 read_sql_query  pandas/io/sql.py:402
+                  │     │        [2 frames hidden]  pandas
+                  │     │           0.9124 Cursor.execute  <built-in>
+                  │     ├─ 0.1107 register_materialized  client/mcp_client.py:404
+                  │     │  └─ 0.1097 AsyncClient.post  httpx/_client.py:1838
+                  │     │        [7 frames hidden]  httpx, httpcore
+                  │     └─ 0.0440 baseline_fetch_json  bench_bird_e2e.py:293
+                  └─ 0.4215 handle_request_async  mcp/client/streamable_http.py:458
+                     └─ 0.4195 StreamableHTTPTransport._handle_post_request  mcp/client/streamable_http.py:245
+                        ├─ 0.2131 _AsyncGeneratorContextManager.__aenter__  contextlib.py:209
+                        │  └─ 0.2131 AsyncClient.stream  httpx/_client.py:1542
+                        │        [8 frames hidden]  httpx, httpcore
+                        └─ 0.1993 StreamableHTTPTransport._handle_json_response  mcp/client/streamable_http.py:284
+                           └─ 0.1746 Response.aread  httpx/_models.py:974
+                                 [11 frames hidden]  httpx, httpcore
+

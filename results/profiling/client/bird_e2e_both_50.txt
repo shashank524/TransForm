@@ -1,0 +1,46 @@
+
+  _     ._   __/__   _ _  _  _ _/_   Recorded: 17:40:55  Samples:  1739
+ /_//_/// /_\ / //_// / //_'/ //     Duration: 3.489     CPU time: 1.263
+/   _/                      v5.1.2
+
+Profile at /Users/shashank/Documents/ChunweiLiuPapers/MultiModalMCP/bench_bird_e2e.py:649
+
+3.4888 main  bench_bird_e2e.py:583
+└─ 3.4888 run  asyncio/runners.py:160
+   └─ 3.4882 Runner.run  asyncio/runners.py:86
+      └─ 3.4882 _UnixSelectorEventLoop.run_until_complete  asyncio/base_events.py:689
+         └─ 3.4882 _UnixSelectorEventLoop.run_forever  asyncio/base_events.py:678
+            └─ 3.4877 _UnixSelectorEventLoop._run_once  asyncio/base_events.py:1970
+               ├─ 1.9990 KqueueSelector.select  selectors.py:540
+               │  └─ 1.9829 kqueue.control  <built-in>
+               └─ 1.4684 Handle._run  asyncio/events.py:87
+                  ├─ 1.1077 run_bench  bench_bird_e2e.py:512
+                  │  └─ 1.0636 run_one  bench_bird_e2e.py:375
+                  │     ├─ 0.7585 execute_sql_sqlite  bench_nl2sql_materialized.py:140
+                  │     │  └─ 0.7460 read_sql_query  pandas/io/sql.py:402
+                  │     │        [2 frames hidden]  pandas
+                  │     │           0.7227 Cursor.execute  <built-in>
+                  │     ├─ 0.0952 enhanced_fetch_recommended  bench_bird_e2e.py:286
+                  │     │  └─ 0.0712 call_large_json  client/mcp_client.py:79
+                  │     │     └─ 0.0712 ClientSession.call_tool  mcp/client/session.py:300
+                  │     │        └─ 0.0607 ClientSession._validate_tool_result  mcp/client/session.py:325
+                  │     │           └─ 0.0597 validate  jsonschema/validators.py:1265
+                  │     │                 [14 frames hidden]  jsonschema
+                  │     ├─ 0.0950 register_materialized  client/mcp_client.py:404
+                  │     │  └─ 0.0926 AsyncClient.post  httpx/_client.py:1838
+                  │     │        [10 frames hidden]  httpx, httpcore
+                  │     └─ 0.0851 baseline_fetch_json  bench_bird_e2e.py:273
+                  │        └─ 0.0836 call_large_json  client/mcp_client.py:79
+                  │           └─ 0.0836 ClientSession.call_tool  mcp/client/session.py:300
+                  │              └─ 0.0705 ClientSession._validate_tool_result  mcp/client/session.py:325
+                  │                 └─ 0.0705 validate  jsonschema/validators.py:1265
+                  │                       [15 frames hidden]  jsonschema
+                  └─ 0.3061 handle_request_async  mcp/client/streamable_http.py:458
+                     └─ 0.3051 StreamableHTTPTransport._handle_post_request  mcp/client/streamable_http.py:245
+                        ├─ 0.1720 _AsyncGeneratorContextManager.__aenter__  contextlib.py:209
+                        │  └─ 0.1710 AsyncClient.stream  httpx/_client.py:1542
+                        │        [8 frames hidden]  httpx, httpcore
+                        └─ 0.1230 StreamableHTTPTransport._handle_json_response  mcp/client/streamable_http.py:284
+                           └─ 0.1074 Response.aread  httpx/_models.py:974
+                                 [8 frames hidden]  httpx, httpcore
+

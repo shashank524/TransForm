@@ -1,0 +1,80 @@
+{
+  "run_header": {
+    "type": "bird_server_exec_e2e_run_header",
+    "format_select_target": "min_time_to_first_rows",
+    "max_queries": 0,
+    "mcp_url": "http://server:8000/mcp/mcp",
+    "server_url": "http://server:8000",
+    "bird_questions": "dev.json",
+    "max_rows": 500000,
+    "rows_per_chunk": 8192,
+    "prefer_streaming": true,
+    "PARQUET_ENCODING_STRATEGY": "data_driven",
+    "PARQUET_COMPRESSION": "snappy",
+    "ARROW_IPC_COMPRESSION": "none",
+    "network": {
+      "net_profile": "LAN",
+      "tc_dev": "eth0",
+      "tc_delay": "1ms",
+      "tc_rate": "1000mbit",
+      "tc_loss": "0%"
+    }
+  },
+  "total_records": 1534,
+  "baseline_ok": 1534,
+  "baseline_failed": 0,
+  "baseline_failed_rate": 0.0,
+  "median_baseline_s": 0.009542874999169726,
+  "p95_baseline_s": 0.4068714579989319,
+  "median_client_total_s": 0.026821333001862513,
+  "p95_client_total_s": 0.3744058330048574,
+  "median_server_auto_total_s": 0.0050545209960546345,
+  "p95_server_auto_total_s": 0.008093291995464824,
+  "median_baseline_bytes": 57.0,
+  "median_client_bytes": 57.0,
+  "median_server_auto_bytes": 57.0,
+  "median_logical_json_records_bytes": 57.0,
+  "median_baseline_wire_bytes": 57.0,
+  "median_client_wire_bytes": 57.0,
+  "median_server_auto_wire_bytes": 57.0,
+  "median_ratio_baseline_over_client_latency": 0.37067379630795516,
+  "median_ratio_baseline_over_auto_latency": 1.7933829621711634,
+  "median_ratio_baseline_over_client_bytes": 1.0,
+  "median_ratio_baseline_over_auto_bytes": 1.0,
+  "median_ratio_baseline_over_client_wire_bytes": 1.0,
+  "median_ratio_baseline_over_auto_wire_bytes": 1.0,
+  "median_client_ttfr_s": 0.01752991600369569,
+  "p95_client_ttfr_s": 0.025586417003069073,
+  "median_server_auto_ttfr_s": 0.008322875000885688,
+  "p95_server_auto_ttfr_s": 0.016437332997156773,
+  "baseline_failure_by_cells_bucket": {
+    "1-1e4": {
+      "total": 1509,
+      "baseline_failed": 0
+    },
+    "1e4-1e5": {
+      "total": 19,
+      "baseline_failed": 0
+    },
+    "1e5-1e6": {
+      "total": 2,
+      "baseline_failed": 0
+    },
+    "0": {
+      "total": 4,
+      "baseline_failed": 0
+    }
+  },
+  "client_chosen_format_counts": {
+    "json": 1364,
+    "parquet_blob": 160,
+    "arrow_ipc_blob": 1,
+    "parquet_stream": 5
+  },
+  "server_auto_chosen_format_counts": {
+    "json": 1364,
+    "parquet_blob": 160,
+    "arrow_ipc_blob": 1,
+    "parquet_stream": 5
+  }
+}

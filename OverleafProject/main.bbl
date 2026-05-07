@@ -1,0 +1,132 @@
+%%% -*-BibTeX-*-
+%%% Do NOT edit. File created by BibTeX with style
+%%% ACM-Reference-Format-Journals [18-Jan-2012].
+
+\begin{thebibliography}{7}
+
+%%% ====================================================================
+%%% NOTE TO THE USER: you can override these defaults by providing
+%%% customized versions of any of these macros before the \bibliography
+%%% command.  Each of them MUST provide its own final punctuation,
+%%% except for \shownote{} and \showURL{}.  The latter two
+%%% do not use final punctuation, in order to avoid confusing it with
+%%% the Web address.
+%%%
+%%% To suppress output of a particular field, define its macro to expand
+%%% to an empty string, or better, \unskip, like this:
+%%%
+%%% \newcommand{\showURL}[1]{\unskip}   % LaTeX syntax
+%%%
+%%% \def \showURL #1{\unskip}           % plain TeX syntax
+%%%
+%%% ====================================================================
+
+\ifx \showCODEN    \undefined \def \showCODEN     #1{\unskip}     \fi
+\ifx \showISBNx    \undefined \def \showISBNx     #1{\unskip}     \fi
+\ifx \showISBNxiii \undefined \def \showISBNxiii  #1{\unskip}     \fi
+\ifx \showISSN     \undefined \def \showISSN      #1{\unskip}     \fi
+\ifx \showLCCN     \undefined \def \showLCCN      #1{\unskip}     \fi
+\ifx \shownote     \undefined \def \shownote      #1{#1}          \fi
+\ifx \showarticletitle \undefined \def \showarticletitle #1{#1}   \fi
+\ifx \showURL      \undefined \def \showURL       {\relax}        \fi
+% The following commands are used for tagged output and should be
+% invisible to TeX
+\providecommand\bibfield[2]{#2}
+\providecommand\bibinfo[2]{#2}
+\providecommand\natexlab[1]{#1}
+\providecommand\showeprint[2][]{arXiv:#2}
+
+\bibitem[{Firebolt}(2025)]%
+        {fireboltAgentsWhitepaper}
+\bibfield{author}{\bibinfo{person}{{Firebolt}}.}
+  \bibinfo{year}{2025}\natexlab{}.
+\newblock \bibinfo{title}{Data Systems in the Age of {AI} Agents: Requirements
+  and Architecture}.
+\newblock
+  \bibinfo{howpublished}{\url{https://www.firebolt.io/resources/data-systems-in-the-age-of-ai-agents}}.
+\newblock
+\newblock
+\shownote{Whitepaper, accessed: 2026-03-31}.
+
+
+\bibitem[Guo et~al\mbox{.}(2025)]%
+        {guoMcpEcosystemMeasurement}
+\bibfield{author}{\bibinfo{person}{Hechuan Guo}, \bibinfo{person}{Yongle Hao},
+  \bibinfo{person}{Yue Zhang}, \bibinfo{person}{Minghui Xu},
+  \bibinfo{person}{Peizhuo Lv}, \bibinfo{person}{Jiezhi Chen}, {and}
+  \bibinfo{person}{Xiuzhen Cheng}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{A Measurement Study of Model Context Protocol
+  Ecosystem}.
+\newblock  (\bibinfo{year}{2025}).
+\newblock
+\showeprint[arxiv]{2509.25292}~[cs.SE]
+
+
+\bibitem[Jiang et~al\mbox{.}(2026)]%
+        {tablemindWsdm2026}
+\bibfield{author}{\bibinfo{person}{Chuang Jiang}, \bibinfo{person}{Mingyue
+  Cheng}, \bibinfo{person}{Xiaoyu Tao}, \bibinfo{person}{Qingyang Mao},
+  \bibinfo{person}{Jie Ouyang}, {and} \bibinfo{person}{Qi Liu}.}
+  \bibinfo{year}{2026}\natexlab{}.
+\newblock \showarticletitle{TableMind: An Autonomous Programmatic Agent for
+  Tool-Augmented Table Reasoning}. In \bibinfo{booktitle}{\emph{Proceedings of
+  the 19th ACM International Conference on Web Search and Data Mining (WSDM)}}.
+\newblock
+\showeprint[arxiv]{2509.06278}
+
+
+\bibitem[Liu et~al\mbox{.}(2024)]%
+        {adaedge}
+\bibfield{author}{\bibinfo{person}{Chunwei Liu}, \bibinfo{person}{John
+  Paparrizos}, {and} \bibinfo{person}{Aaron~J. Elmore}.}
+  \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{AdaEdge: A Dynamic Compression Selection Framework
+  for Resource Constrained Devices}. In \bibinfo{booktitle}{\emph{40th IEEE
+  International Conference on Data Engineering (ICDE)}}.
+  \bibinfo{publisher}{IEEE}, \bibinfo{pages}{1506--1519}.
+\newblock
+\href{https://doi.org/10.1109/ICDE60146.2024.00124}{doi:\nolinkurl{10.1109/ICDE60146.2024.00124}}
+
+
+\bibitem[Liu et~al\mbox{.}(2025a)]%
+        {liuDataFormatsVldbj2025}
+\bibfield{author}{\bibinfo{person}{Chunwei Liu}, \bibinfo{person}{Anna
+  Pavlenko}, \bibinfo{person}{Matteo Interlandi}, {and}
+  \bibinfo{person}{Brandon Haynes}.} \bibinfo{year}{2025}\natexlab{a}.
+\newblock \showarticletitle{Data formats in analytical {DBMSs}: performance
+  trade-offs and future directions}.
+\newblock \bibinfo{journal}{\emph{The VLDB Journal}} (\bibinfo{year}{2025}).
+\newblock
+\href{https://doi.org/10.1007/s00778-025-00911-1}{doi:\nolinkurl{10.1007/s00778-025-00911-1}}
+
+
+\bibitem[Liu et~al\mbox{.}(2025b)]%
+        {liuAgentFirstOverlords}
+\bibfield{author}{\bibinfo{person}{Shu Liu}, \bibinfo{person}{Soujanya
+  Ponnapalli}, \bibinfo{person}{Shreya Shankar}, \bibinfo{person}{Sepanta
+  Zeighami}, \bibinfo{person}{Alan Zhu}, \bibinfo{person}{Shubham Agarwal},
+  \bibinfo{person}{Ruiqi Chen}, \bibinfo{person}{Samion Suwito},
+  \bibinfo{person}{Shuo Yuan}, \bibinfo{person}{Ion Stoica},
+  \bibinfo{person}{Matei Zaharia}, \bibinfo{person}{Alvin Cheung},
+  \bibinfo{person}{Natacha Crooks}, \bibinfo{person}{Joseph~E. Gonzalez}, {and}
+  \bibinfo{person}{Aditya~G. Parameswaran}.} \bibinfo{year}{2025}\natexlab{b}.
+\newblock \showarticletitle{Supporting Our {AI} Overlords: Redesigning Data
+  Systems to be Agent-First}.
+\newblock  (\bibinfo{year}{2025}).
+\newblock
+\showeprint[arxiv]{2509.00997}~[cs.DB]
+
+
+\bibitem[{TOON Format}(2025)]%
+        {toonVsJsonModel}
+\bibfield{author}{\bibinfo{person}{{TOON Format}}.}
+  \bibinfo{year}{2025}\natexlab{}.
+\newblock \bibinfo{title}{TOON vs JSON: Byte-Level Efficiency Model}.
+\newblock
+  \bibinfo{howpublished}{\url{https://toonformat.dev/reference/efficiency-formalization.html}}.
+\newblock
+\newblock
+\shownote{Accessed: 2026-03-31}.
+
+
+\end{thebibliography}

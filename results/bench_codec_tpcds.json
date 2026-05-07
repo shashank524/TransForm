@@ -1,0 +1,812 @@
+[
+  {
+    "codec": "json",
+    "encoding_strategy": "n/a",
+    "bytes": 1799688,
+    "encode_s": 0.014901,
+    "decode_s": 0.008525,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 10000,
+    "n_cols": 6
+  },
+  {
+    "codec": "snappy",
+    "encoding_strategy": "default",
+    "bytes": 62198,
+    "encode_s": 0.001707,
+    "decode_s": 0.001042,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 10000,
+    "n_cols": 6
+  },
+  {
+    "codec": "snappy",
+    "encoding_strategy": "data_driven",
+    "bytes": 62198,
+    "encode_s": 0.002374,
+    "decode_s": 0.000781,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 10000,
+    "n_cols": 6
+  },
+  {
+    "codec": "gzip",
+    "encoding_strategy": "default",
+    "bytes": 50911,
+    "encode_s": 0.015779,
+    "decode_s": 0.000838,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 10000,
+    "n_cols": 6
+  },
+  {
+    "codec": "gzip",
+    "encoding_strategy": "data_driven",
+    "bytes": 50911,
+    "encode_s": 0.015776,
+    "decode_s": 0.000682,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 10000,
+    "n_cols": 6
+  },
+  {
+    "codec": "zstd",
+    "encoding_strategy": "default",
+    "bytes": 50085,
+    "encode_s": 0.002417,
+    "decode_s": 0.000868,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 10000,
+    "n_cols": 6
+  },
+  {
+    "codec": "zstd",
+    "encoding_strategy": "data_driven",
+    "bytes": 50085,
+    "encode_s": 0.002039,
+    "decode_s": 0.000456,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 10000,
+    "n_cols": 6
+  },
+  {
+    "codec": "none",
+    "encoding_strategy": "default",
+    "bytes": 82842,
+    "encode_s": 0.001146,
+    "decode_s": 0.000648,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 10000,
+    "n_cols": 6
+  },
+  {
+    "codec": "none",
+    "encoding_strategy": "data_driven",
+    "bytes": 82842,
+    "encode_s": 0.001842,
+    "decode_s": 0.000604,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 10000,
+    "n_cols": 6
+  },
+  {
+    "codec": "json",
+    "encoding_strategy": "n/a",
+    "bytes": 5428824,
+    "encode_s": 0.042353,
+    "decode_s": 0.026684,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 10000,
+    "n_cols": 20
+  },
+  {
+    "codec": "snappy",
+    "encoding_strategy": "default",
+    "bytes": 262137,
+    "encode_s": 0.00462,
+    "decode_s": 0.001494,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 10000,
+    "n_cols": 20
+  },
+  {
+    "codec": "snappy",
+    "encoding_strategy": "data_driven",
+    "bytes": 247815,
+    "encode_s": 0.00603,
+    "decode_s": 0.001142,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 10000,
+    "n_cols": 20
+  },
+  {
+    "codec": "gzip",
+    "encoding_strategy": "default",
+    "bytes": 216902,
+    "encode_s": 0.081331,
+    "decode_s": 0.001525,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 10000,
+    "n_cols": 20
+  },
+  {
+    "codec": "gzip",
+    "encoding_strategy": "data_driven",
+    "bytes": 197729,
+    "encode_s": 0.089254,
+    "decode_s": 0.001358,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 10000,
+    "n_cols": 20
+  },
+  {
+    "codec": "zstd",
+    "encoding_strategy": "default",
+    "bytes": 211641,
+    "encode_s": 0.004495,
+    "decode_s": 0.001154,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 10000,
+    "n_cols": 20
+  },
+  {
+    "codec": "zstd",
+    "encoding_strategy": "data_driven",
+    "bytes": 194620,
+    "encode_s": 0.006311,
+    "decode_s": 0.000923,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 10000,
+    "n_cols": 20
+  },
+  {
+    "codec": "none",
+    "encoding_strategy": "default",
+    "bytes": 340334,
+    "encode_s": 0.003747,
+    "decode_s": 0.001155,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 10000,
+    "n_cols": 20
+  },
+  {
+    "codec": "none",
+    "encoding_strategy": "data_driven",
+    "bytes": 350266,
+    "encode_s": 0.005201,
+    "decode_s": 0.001023,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 10000,
+    "n_cols": 20
+  },
+  {
+    "codec": "json",
+    "encoding_strategy": "n/a",
+    "bytes": 9369270,
+    "encode_s": 0.110173,
+    "decode_s": 0.045252,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 10000,
+    "n_cols": 34
+  },
+  {
+    "codec": "snappy",
+    "encoding_strategy": "default",
+    "bytes": 952378,
+    "encode_s": 0.010305,
+    "decode_s": 0.002063,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 10000,
+    "n_cols": 34
+  },
+  {
+    "codec": "snappy",
+    "encoding_strategy": "data_driven",
+    "bytes": 751439,
+    "encode_s": 0.011443,
+    "decode_s": 0.00182,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 10000,
+    "n_cols": 34
+  },
+  {
+    "codec": "gzip",
+    "encoding_strategy": "default",
+    "bytes": 805376,
+    "encode_s": 0.107474,
+    "decode_s": 0.002442,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 10000,
+    "n_cols": 34
+  },
+  {
+    "codec": "gzip",
+    "encoding_strategy": "data_driven",
+    "bytes": 590273,
+    "encode_s": 0.113549,
+    "decode_s": 0.00183,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 10000,
+    "n_cols": 34
+  },
+  {
+    "codec": "zstd",
+    "encoding_strategy": "default",
+    "bytes": 792545,
+    "encode_s": 0.01107,
+    "decode_s": 0.001659,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 10000,
+    "n_cols": 34
+  },
+  {
+    "codec": "zstd",
+    "encoding_strategy": "data_driven",
+    "bytes": 575839,
+    "encode_s": 0.011804,
+    "decode_s": 0.00152,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 10000,
+    "n_cols": 34
+  },
+  {
+    "codec": "none",
+    "encoding_strategy": "default",
+    "bytes": 1034384,
+    "encode_s": 0.00904,
+    "decode_s": 0.001759,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 10000,
+    "n_cols": 34
+  },
+  {
+    "codec": "none",
+    "encoding_strategy": "data_driven",
+    "bytes": 859334,
+    "encode_s": 0.010047,
+    "decode_s": 0.001588,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 10000,
+    "n_cols": 34
+  },
+  {
+    "codec": "json",
+    "encoding_strategy": "n/a",
+    "bytes": 17995975,
+    "encode_s": 0.114942,
+    "decode_s": 0.067645,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 100000,
+    "n_cols": 6
+  },
+  {
+    "codec": "snappy",
+    "encoding_strategy": "default",
+    "bytes": 622590,
+    "encode_s": 0.008235,
+    "decode_s": 0.001268,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 100000,
+    "n_cols": 6
+  },
+  {
+    "codec": "snappy",
+    "encoding_strategy": "data_driven",
+    "bytes": 622590,
+    "encode_s": 0.011961,
+    "decode_s": 0.001088,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 100000,
+    "n_cols": 6
+  },
+  {
+    "codec": "gzip",
+    "encoding_strategy": "default",
+    "bytes": 474764,
+    "encode_s": 0.188277,
+    "decode_s": 0.002452,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 100000,
+    "n_cols": 6
+  },
+  {
+    "codec": "gzip",
+    "encoding_strategy": "data_driven",
+    "bytes": 474764,
+    "encode_s": 0.200235,
+    "decode_s": 0.001894,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 100000,
+    "n_cols": 6
+  },
+  {
+    "codec": "zstd",
+    "encoding_strategy": "default",
+    "bytes": 482787,
+    "encode_s": 0.009451,
+    "decode_s": 0.001346,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 100000,
+    "n_cols": 6
+  },
+  {
+    "codec": "zstd",
+    "encoding_strategy": "data_driven",
+    "bytes": 482787,
+    "encode_s": 0.014267,
+    "decode_s": 0.001388,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 100000,
+    "n_cols": 6
+  },
+  {
+    "codec": "none",
+    "encoding_strategy": "default",
+    "bytes": 776079,
+    "encode_s": 0.008025,
+    "decode_s": 0.001194,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 100000,
+    "n_cols": 6
+  },
+  {
+    "codec": "none",
+    "encoding_strategy": "data_driven",
+    "bytes": 776079,
+    "encode_s": 0.012509,
+    "decode_s": 0.001099,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 100000,
+    "n_cols": 6
+  },
+  {
+    "codec": "json",
+    "encoding_strategy": "n/a",
+    "bytes": 54426911,
+    "encode_s": 0.388314,
+    "decode_s": 0.222984,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 100000,
+    "n_cols": 20
+  },
+  {
+    "codec": "snappy",
+    "encoding_strategy": "default",
+    "bytes": 2253761,
+    "encode_s": 0.028481,
+    "decode_s": 0.003296,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 100000,
+    "n_cols": 20
+  },
+  {
+    "codec": "snappy",
+    "encoding_strategy": "data_driven",
+    "bytes": 2253761,
+    "encode_s": 0.039244,
+    "decode_s": 0.003283,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 100000,
+    "n_cols": 20
+  },
+  {
+    "codec": "gzip",
+    "encoding_strategy": "default",
+    "bytes": 1821870,
+    "encode_s": 0.581223,
+    "decode_s": 0.00477,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 100000,
+    "n_cols": 20
+  },
+  {
+    "codec": "gzip",
+    "encoding_strategy": "data_driven",
+    "bytes": 1821870,
+    "encode_s": 0.608671,
+    "decode_s": 0.004438,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 100000,
+    "n_cols": 20
+  },
+  {
+    "codec": "zstd",
+    "encoding_strategy": "default",
+    "bytes": 1844266,
+    "encode_s": 0.030368,
+    "decode_s": 0.003171,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 100000,
+    "n_cols": 20
+  },
+  {
+    "codec": "zstd",
+    "encoding_strategy": "data_driven",
+    "bytes": 1844266,
+    "encode_s": 0.043413,
+    "decode_s": 0.003168,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 100000,
+    "n_cols": 20
+  },
+  {
+    "codec": "none",
+    "encoding_strategy": "default",
+    "bytes": 2691011,
+    "encode_s": 0.025915,
+    "decode_s": 0.00315,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 100000,
+    "n_cols": 20
+  },
+  {
+    "codec": "none",
+    "encoding_strategy": "data_driven",
+    "bytes": 2691011,
+    "encode_s": 0.037686,
+    "decode_s": 0.002925,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 100000,
+    "n_cols": 20
+  },
+  {
+    "codec": "json",
+    "encoding_strategy": "n/a",
+    "bytes": 93829384,
+    "encode_s": 1.020474,
+    "decode_s": 0.407899,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 100000,
+    "n_cols": 34
+  },
+  {
+    "codec": "snappy",
+    "encoding_strategy": "default",
+    "bytes": 8343944,
+    "encode_s": 0.087389,
+    "decode_s": 0.007997,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 100000,
+    "n_cols": 34
+  },
+  {
+    "codec": "snappy",
+    "encoding_strategy": "data_driven",
+    "bytes": 7105593,
+    "encode_s": 0.102731,
+    "decode_s": 0.005416,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 100000,
+    "n_cols": 34
+  },
+  {
+    "codec": "gzip",
+    "encoding_strategy": "default",
+    "bytes": 7072231,
+    "encode_s": 1.039573,
+    "decode_s": 0.014498,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 100000,
+    "n_cols": 34
+  },
+  {
+    "codec": "gzip",
+    "encoding_strategy": "data_driven",
+    "bytes": 5677504,
+    "encode_s": 1.032983,
+    "decode_s": 0.010525,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 100000,
+    "n_cols": 34
+  },
+  {
+    "codec": "zstd",
+    "encoding_strategy": "default",
+    "bytes": 7086016,
+    "encode_s": 0.091922,
+    "decode_s": 0.008021,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 100000,
+    "n_cols": 34
+  },
+  {
+    "codec": "zstd",
+    "encoding_strategy": "data_driven",
+    "bytes": 5592836,
+    "encode_s": 0.108069,
+    "decode_s": 0.005253,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 100000,
+    "n_cols": 34
+  },
+  {
+    "codec": "none",
+    "encoding_strategy": "default",
+    "bytes": 8840936,
+    "encode_s": 0.082541,
+    "decode_s": 0.006881,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 100000,
+    "n_cols": 34
+  },
+  {
+    "codec": "none",
+    "encoding_strategy": "data_driven",
+    "bytes": 7620067,
+    "encode_s": 0.09563,
+    "decode_s": 0.005047,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 100000,
+    "n_cols": 34
+  },
+  {
+    "codec": "json",
+    "encoding_strategy": "n/a",
+    "bytes": 89981589,
+    "encode_s": 0.58963,
+    "decode_s": 0.352414,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 500000,
+    "n_cols": 6
+  },
+  {
+    "codec": "snappy",
+    "encoding_strategy": "default",
+    "bytes": 2957558,
+    "encode_s": 0.041023,
+    "decode_s": 0.003623,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 500000,
+    "n_cols": 6
+  },
+  {
+    "codec": "snappy",
+    "encoding_strategy": "data_driven",
+    "bytes": 2957558,
+    "encode_s": 0.062401,
+    "decode_s": 0.003119,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 500000,
+    "n_cols": 6
+  },
+  {
+    "codec": "gzip",
+    "encoding_strategy": "default",
+    "bytes": 2326449,
+    "encode_s": 0.77812,
+    "decode_s": 0.01028,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 500000,
+    "n_cols": 6
+  },
+  {
+    "codec": "gzip",
+    "encoding_strategy": "data_driven",
+    "bytes": 2326449,
+    "encode_s": 0.878119,
+    "decode_s": 0.007048,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 500000,
+    "n_cols": 6
+  },
+  {
+    "codec": "zstd",
+    "encoding_strategy": "default",
+    "bytes": 2366370,
+    "encode_s": 0.048442,
+    "decode_s": 0.003986,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 500000,
+    "n_cols": 6
+  },
+  {
+    "codec": "zstd",
+    "encoding_strategy": "data_driven",
+    "bytes": 2366370,
+    "encode_s": 0.074052,
+    "decode_s": 0.004103,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 500000,
+    "n_cols": 6
+  },
+  {
+    "codec": "none",
+    "encoding_strategy": "default",
+    "bytes": 3711340,
+    "encode_s": 0.044368,
+    "decode_s": 0.003623,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 500000,
+    "n_cols": 6
+  },
+  {
+    "codec": "none",
+    "encoding_strategy": "data_driven",
+    "bytes": 3711340,
+    "encode_s": 0.067044,
+    "decode_s": 0.003308,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 500000,
+    "n_cols": 6
+  },
+  {
+    "codec": "json",
+    "encoding_strategy": "n/a",
+    "bytes": 273002975,
+    "encode_s": 1.973778,
+    "decode_s": 1.217635,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 500000,
+    "n_cols": 20
+  },
+  {
+    "codec": "snappy",
+    "encoding_strategy": "default",
+    "bytes": 10687215,
+    "encode_s": 0.143281,
+    "decode_s": 0.015786,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 500000,
+    "n_cols": 20
+  },
+  {
+    "codec": "snappy",
+    "encoding_strategy": "data_driven",
+    "bytes": 10687215,
+    "encode_s": 0.213374,
+    "decode_s": 0.014642,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 500000,
+    "n_cols": 20
+  },
+  {
+    "codec": "gzip",
+    "encoding_strategy": "default",
+    "bytes": 8881189,
+    "encode_s": 2.502773,
+    "decode_s": 0.026011,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 500000,
+    "n_cols": 20
+  },
+  {
+    "codec": "gzip",
+    "encoding_strategy": "data_driven",
+    "bytes": 8881189,
+    "encode_s": 2.466763,
+    "decode_s": 0.018116,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 500000,
+    "n_cols": 20
+  },
+  {
+    "codec": "zstd",
+    "encoding_strategy": "default",
+    "bytes": 9021164,
+    "encode_s": 0.145504,
+    "decode_s": 0.013431,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 500000,
+    "n_cols": 20
+  },
+  {
+    "codec": "zstd",
+    "encoding_strategy": "data_driven",
+    "bytes": 9021164,
+    "encode_s": 0.20865,
+    "decode_s": 0.012618,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 500000,
+    "n_cols": 20
+  },
+  {
+    "codec": "none",
+    "encoding_strategy": "default",
+    "bytes": 12662163,
+    "encode_s": 0.124445,
+    "decode_s": 0.012764,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 500000,
+    "n_cols": 20
+  },
+  {
+    "codec": "none",
+    "encoding_strategy": "data_driven",
+    "bytes": 12662163,
+    "encode_s": 0.186177,
+    "decode_s": 0.012262,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 500000,
+    "n_cols": 20
+  },
+  {
+    "codec": "json",
+    "encoding_strategy": "n/a",
+    "bytes": 469994346,
+    "encode_s": 4.767895,
+    "decode_s": 2.000162,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 500000,
+    "n_cols": 34
+  },
+  {
+    "codec": "snappy",
+    "encoding_strategy": "default",
+    "bytes": 35802052,
+    "encode_s": 0.423851,
+    "decode_s": 0.032667,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 500000,
+    "n_cols": 34
+  },
+  {
+    "codec": "snappy",
+    "encoding_strategy": "data_driven",
+    "bytes": 34174362,
+    "encode_s": 0.524031,
+    "decode_s": 0.020823,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 500000,
+    "n_cols": 34
+  },
+  {
+    "codec": "gzip",
+    "encoding_strategy": "default",
+    "bytes": 31153690,
+    "encode_s": 3.621137,
+    "decode_s": 0.054686,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 500000,
+    "n_cols": 34
+  },
+  {
+    "codec": "gzip",
+    "encoding_strategy": "data_driven",
+    "bytes": 27751872,
+    "encode_s": 4.076453,
+    "decode_s": 0.034681,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 500000,
+    "n_cols": 34
+  },
+  {
+    "codec": "zstd",
+    "encoding_strategy": "default",
+    "bytes": 31297600,
+    "encode_s": 0.449272,
+    "decode_s": 0.032835,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 500000,
+    "n_cols": 34
+  },
+  {
+    "codec": "zstd",
+    "encoding_strategy": "data_driven",
+    "bytes": 27412093,
+    "encode_s": 0.554542,
+    "decode_s": 0.02341,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 500000,
+    "n_cols": 34
+  },
+  {
+    "codec": "none",
+    "encoding_strategy": "default",
+    "bytes": 38145391,
+    "encode_s": 0.397846,
+    "decode_s": 0.029528,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 500000,
+    "n_cols": 34
+  },
+  {
+    "codec": "none",
+    "encoding_strategy": "data_driven",
+    "bytes": 36518665,
+    "encode_s": 0.489371,
+    "decode_s": 0.021675,
+    "dataset": "tpcds_catalog_sales",
+    "n_rows": 500000,
+    "n_cols": 34
+  }
+]

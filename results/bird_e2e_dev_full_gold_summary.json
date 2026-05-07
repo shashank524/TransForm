@@ -1,0 +1,56 @@
+{
+  "run_header": {
+    "type": "bird_e2e_run_header",
+    "sql_source": "gold",
+    "frozen_sql": null,
+    "format_select_target": "min_latency",
+    "arms": "both",
+    "strict_exec": true,
+    "allow_gold_fallback": false,
+    "with_summary": false,
+    "mcp_url": "http://localhost:8000/mcp/mcp",
+    "server_url": "http://localhost:8000",
+    "bird_questions": "dev.json",
+    "max_queries": 1534
+  },
+  "total_query_records": 1534,
+  "exec_ok": 1534,
+  "registration_ok": 1534,
+  "transport_measured": 1534,
+  "used_gold_sql_for_transport": 0,
+  "nl2sql_errors": 0,
+  "exec_failures_no_row": 0,
+  "frozen_sql_missing": 0,
+  "sql_source_counts": {
+    "gold": 1534
+  },
+  "recommended_format_counts": {
+    "json": 1370,
+    "parquet_blob": 164
+  },
+  "median_nl2sql_s": null,
+  "p95_nl2sql_s": null,
+  "median_baseline_fetch_s": 0.005694083505659364,
+  "p95_baseline_fetch_s": 0.043281125006615184,
+  "median_describe_s": 0.0047930830041877925,
+  "median_enhanced_fetch_s": 0.00539031250809785,
+  "p95_enhanced_fetch_s": 0.014991459000157192,
+  "median_enhanced_total_s": 0.010297208500560373,
+  "median_baseline_bytes": 57.0,
+  "median_enhanced_bytes": 57.0,
+  "p95_baseline_bytes": 11966.0,
+  "p95_enhanced_bytes": 3650.0,
+  "payload_queries_where_bytes_equal": 1370,
+  "payload_queries_where_enhanced_smaller": 164,
+  "payload_queries_where_baseline_smaller": 0,
+  "payload_sum_baseline_bytes": 43439928,
+  "payload_sum_enhanced_bytes": 6386514,
+  "median_ratio_baseline_fetch_over_enhanced_fetch": 1.0707041118209104,
+  "median_ratio_baseline_bytes_over_enhanced_bytes": 1.0,
+  "median_summary_s": null,
+  "p95_summary_s": null,
+  "summary_examples": [],
+  "environment": {
+    "ollama_model": "(not set in summarize env)"
+  }
+}

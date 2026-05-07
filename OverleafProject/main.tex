@@ -1,0 +1,110 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Project:  A Format Selection Framework for AI Agent Data Transmission
+% Template: VLDB 2020-08-03 (ACM 1.7.0)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[sigconf, nonacm]{acmart}
+
+%% BibTeX command
+\AtBeginDocument{%
+  \providecommand\BibTeX{{%
+    \normalfont B\kern-0.5em{\sc i\kern-0.25em b}\kern-0-8em\TeX}}}
+
+%% Packages
+\usepackage{subcaption}
+\usepackage{cleveref}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{array}
+\usepackage{xcolor}
+
+% --- Custom Commands ---
+\newcommand\todo[1]{\textcolor{red}{#1}}
+
+% === SYSTEM NAME ===
+\newcommand{\system}{TransForm} 
+
+% Highlighted block for instructor notes/feedback
+\newcommand{\highlight}[1]{\colorbox{yellow}{\parbox{\dimexpr\columnwidth-2\fboxsep\relax}{#1}}}
+
+%% VLDB Metadata (Updated for 2026)
+\newcommand\vldbdoi{10.14778/xxxxxxx.xxxxxxx}
+\newcommand\vldbpages{XXX-XXX}
+\newcommand\vldbvolume{19}
+\newcommand\vldbissue{1}
+\newcommand\vldbyear{2026}
+\newcommand\vldbauthors{\authors}
+\newcommand\vldbtitle{\shorttitle}
+\newcommand\vldbavailabilityurl{https://github.com/YourRepo/TransForm}
+\newcommand\vldbpagestyle{plain}
+
+\begin{document}
+
+\title{\system: A Dynamic Format Selection Framework for Data Transmission in AI Agent Systems}
+
+%% AUTHOR UPDATES
+%% AUTHOR UPDATES
+\author{Shashank Mukkera}
+\affiliation{%
+  \institution{Purdue University}
+  % \city{West Lafayette}
+  % \state{Indiana}
+  \country{USA}
+}
+\email{smukkera@purdue.edu}
+
+\author{Chunwei Liu}
+\affiliation{%
+  \institution{Purdue University}
+  % \city{West Lafayette}
+  % \state{Indiana}
+  \country{USA}
+}
+\email{chunwei@purdue.edu}
+
+\begin{abstract}
+\input{0abstract}
+\end{abstract}
+
+\maketitle
+
+%%% VLDB block start %%%
+\pagestyle{\vldbpagestyle}
+\begingroup\small\noindent\raggedright\textbf{PVLDB Reference Format:}\\
+\vldbauthors. \vldbtitle. PVLDB, \vldbvolume(\vldbissue): \vldbpages, \vldbyear.\\
+\href{https://doi.org/\vldbdoi}{doi:\vldbdoi}
+\endgroup
+
+\begingroup
+\renewcommand\thefootnote{}\footnote{\noindent
+This work is licensed under the Creative Commons BY-NC-ND 4.0 International License. Visit \url{https://creativecommons.org/licenses/by-nc-nd/4.0/} to view a copy of this license. Publication rights licensed to the VLDB Endowment. \\
+\raggedright Proceedings of the VLDB Endowment, Vol. \vldbvolume, No. \vldbissue\ %
+ISSN 2150-8097. \\
+\href{https://doi.org/\vldbdoi}{doi:\vldbdoi} \\
+}\addtocounter{footnote}{-1}\endgroup
+%%% VLDB block end %%%
+
+\section{Introduction}
+\input{1intro}
+
+\section{Related Work}
+\input{2related}
+
+\section{Overview}
+\input{3overview}
+
+\section{Evaluation}
+\input{4eval}
+
+\section{Conclusion}
+\input{5conclusion}
+
+\begin{acks}
+This work was supported by the Department of Computer Science at Purdue University.
+\end{acks}
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{ref}
+
+\end{document}
+\endinput

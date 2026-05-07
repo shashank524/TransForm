@@ -1,0 +1,60 @@
+services:
+  server:
+    build: .
+    working_dir: /app
+    command: ["uvicorn", "server_app:app", "--host", "0.0.0.0", "--port", "8000"]
+    environment:
+      # Point server to BIRD sqlite root inside container (mounted volume)
+      BIRD_SQLITE_ROOT: /data/bird/dev
+      SQLITE_QUERY_TIMEOUT_S: "30"
+      # Paper decision
+      PARQUET_ENCODING_STRATEGY: data_driven
+      PARQUET_COMPRESSION: snappy
+      ARROW_IPC_COMPRESSION: none
+      # Regime knobs (set per run via env):
+      DISABLE_JSON_CAP: ${DISABLE_JSON_CAP:-}
+      MAX_JSON_CELLS_OVERRIDE: ${MAX_JSON_CELLS_OVERRIDE:-}
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - ./data/datasets/bird:/data/bird
+
+  client:
+    build: .
+    working_dir: /app
+    depends_on:
+      - server
+    # NET_ADMIN needed for tc qdisc inside container
+    cap_add:
+      - NET_ADMIN
+    environment:
+      BIRD_SQLITE_ROOT: /data/bird/dev
+      PARQUET_ENCODING_STRATEGY: data_driven
+      PARQUET_COMPRESSION: snappy
+      ARROW_IPC_COMPRESSION: none
+      MCP_URL: http://server:8000/mcp/mcp
+      SERVER_URL: http://server:8000
+      # Network profile name for scripts/tc_apply.sh (LAN/WAN/Cellular/BadWifi)
+      NET_PROFILE: WAN
+      # Benchmark target (override per run)
+      FORMAT_SELECT_TARGET: min_time_to_first_rows
+      DISABLE_JSON_CAP: ${DISABLE_JSON_CAP:-}
+      MAX_JSON_CELLS_OVERRIDE: ${MAX_JSON_CELLS_OVERRIDE:-}
+    volumes:
+      - .:/app
+      - ./data/datasets/bird:/data/bird
+    entrypoint: ["/bin/sh", "-lc"]
+    # Default: apply shaping then run full dev (all queries) with streaming preference.
+    command:
+      - |
+        . ./scripts/tc_apply.sh "${NET_PROFILE}" && \
+        python bench_bird_server_exec_e2e.py \
+          --data-dir /data/bird/dev \
+          --bird-questions dev.json \
+          --max-queries 0 \
+          --prefer-streaming \
+          --mcp-url "${MCP_URL}" \
+          --server-url "${SERVER_URL}" \
+          --overwrite
+
