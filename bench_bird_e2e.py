@@ -64,6 +64,7 @@ from client.mcp_client import (
     call_large_arrow_ipc_blob,
     call_large_arrow_ipc_stream,
     call_large_result_auto,
+    call_bird_query_run_inline,
     fetch_blob,
     fetch_stream_chunks,
     register_materialized,
@@ -143,6 +144,13 @@ class BirdE2ERecord:
     server_auto_chosen_format: str = ""
     server_auto_bytes: Optional[int] = None
     server_auto_error: Optional[str] = None
+    # Round-2 (F9): inline arm = bird_query_run_inline (no /materialized POST,
+    # no parquet disk write on JSON path). Mirrors the server_auto_* shape.
+    inline_call_s: Optional[float] = None
+    inline_payload_s: Optional[float] = None
+    inline_chosen_format: str = ""
+    inline_bytes: Optional[int] = None
+    inline_error: Optional[str] = None
     summary_s: Optional[float] = None
     summary_text: str = ""
     summary_error: Optional[str] = None
@@ -369,6 +377,59 @@ async def enhanced_fetch_recommended(
     return describe_s, fetch_s, recommended, nbytes
 
 
+async def inline_transport(
+    session: Any,
+    http: httpx.AsyncClient,
+    db_id: str,
+    sql: str,
+    target: OptimizationTarget,
+    server_url: str,
+    rows_per_chunk: int,
+) -> tuple[float, float, str, int]:
+    """
+    Round-2 (F9): one MCP round trip executing SQL + selecting format +
+    returning payload via `bird_query_run_inline`. No /materialized POST.
+
+    Returns (call_s, payload_s, chosen_format, nbytes).
+    """
+    t_call = time.perf_counter()
+    auto = await call_bird_query_run_inline(
+        session,
+        db_id=db_id,
+        sql=sql,
+        optimization_target=target.value,
+        rows_per_chunk=rows_per_chunk,
+        prefer_streaming=False,
+        use_mab=False,
+    )
+    call_s = time.perf_counter() - t_call
+
+    t_pay = time.perf_counter()
+    payload = auto.get("payload") if isinstance(auto, dict) else None
+    decode = auto.get("decode") if isinstance(auto, dict) else None
+    chosen = str(auto.get("chosen_format") or "")
+
+    if isinstance(payload, dict) and payload.get("kind") == "json":
+        raw = json.dumps(payload.get("records"))
+        nbytes = len(raw.encode("utf-8"))
+        return call_s, time.perf_counter() - t_pay, chosen, nbytes
+
+    if not isinstance(decode, dict) or not isinstance(decode.get("url"), str):
+        return call_s, time.perf_counter() - t_pay, chosen, 0
+
+    url = _rewrite_server_url(decode["url"], server_url)
+    transport = str(decode.get("transport") or "")
+    prefix = 8
+    if transport == "http_length_prefixed_stream":
+        nbytes = 0
+        async for chunk in fetch_stream_chunks(http, url, length_prefix_bytes=prefix):
+            nbytes += prefix + len(chunk)
+    else:
+        data = await fetch_blob(http, url)
+        nbytes = len(data)
+    return call_s, time.perf_counter() - t_pay, chosen, nbytes
+
+
 async def server_auto_transport(
     session: Any,
     http: httpx.AsyncClient,
@@ -555,15 +616,21 @@ async def run_one(
     rec.n_rows = int(n_rows)
     rec.n_cols = int(n_cols)
 
-    try:
-        t0 = time.perf_counter()
-        pq_bytes = df_to_parquet_bytes(df)
-        reg = await register_materialized(http, pq_bytes, base_url=server_url)
-        rec.register_s = time.perf_counter() - t0
-        rec.result_id = reg.get("result_id", "")
-    except Exception as exc:
-        rec.register_error = str(exc)
-        return rec
+    # Inline arm bypasses the /materialized POST entirely — the server-side
+    # `bird_query_run_inline` tool does the SQL execution itself. We still
+    # need a result_id only when the user explicitly opted into a non-inline
+    # arm.
+    needs_register = arms in ("both", "baseline", "enhanced", "server")
+    if needs_register:
+        try:
+            t0 = time.perf_counter()
+            pq_bytes = df_to_parquet_bytes(df)
+            reg = await register_materialized(http, pq_bytes, base_url=server_url)
+            rec.register_s = time.perf_counter() - t0
+            rec.result_id = reg.get("result_id", "")
+        except Exception as exc:
+            rec.register_error = str(exc)
+            return rec
 
     result_id = rec.result_id
     if arms in ("both", "baseline"):
@@ -603,6 +670,25 @@ async def run_one(
             rec.server_auto_bytes = nb
         except Exception as exc:
             rec.server_auto_error = str(exc)
+
+    if arms == "inline":
+        try:
+            rpc = min(STREAM_ROWS_PER_CHUNK, max(1, int(n_rows)))
+            cs, ps, ch_fmt, nb = await inline_transport(
+                session,
+                http,
+                item.db_id,
+                sql_to_run,
+                target,
+                server_url,
+                rows_per_chunk=rpc,
+            )
+            rec.inline_call_s = cs
+            rec.inline_payload_s = ps
+            rec.inline_chosen_format = ch_fmt
+            rec.inline_bytes = nb
+        except Exception as exc:
+            rec.inline_error = str(exc)
 
     if with_summary and df is not None and not df.empty:
         ss, st, se = await optional_summary_llm(item.question, df)
@@ -676,12 +762,13 @@ async def run_bench(args: argparse.Namespace) -> None:
             )
             append_jsonl(out_path, rec)
             log.info(
-                "  exec_ok=%s rows=%s baseline=%s enhanced=%s server_auto=%s",
+                "  exec_ok=%s rows=%s baseline=%s enhanced=%s server_auto=%s inline=%s",
                 rec.exec_ok,
                 rec.n_rows,
                 rec.baseline_fetch_s is not None,
                 rec.enhanced_fetch_s is not None,
                 rec.server_auto_call_s is not None,
+                rec.inline_call_s is not None,
             )
 
 
@@ -710,11 +797,12 @@ def main() -> None:
     )
     p.add_argument(
         "--arms",
-        choices=["both", "baseline", "enhanced", "server"],
+        choices=["both", "baseline", "enhanced", "server", "inline"],
         default="both",
         help=(
             "Which transport arm(s) to run per query: baseline=large_json only; "
             "enhanced=describe+fetch; server=large_result_auto (server-side selection); "
+            "inline=bird_query_run_inline (round-2 fused path: SQL+select+payload in 1 RTT); "
             "both=baseline+enhanced"
         ),
     )

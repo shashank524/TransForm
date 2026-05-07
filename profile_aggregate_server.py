@@ -18,14 +18,25 @@ from collections import defaultdict
 from pathlib import Path
 
 
+_UUID_RE = re.compile(
+    r"[_-][0-9a-f]{8}[_-][0-9a-f]{4}[_-][0-9a-f]{4}[_-][0-9a-f]{4}[_-][0-9a-f]{12}"
+)
+
+
 def _label(stem: str) -> str:
-    """File names look like '00110_POST_mcp_mcp_describe_result_formats'."""
+    """File names look like '00110_POST_mcp_mcp_describe_result_formats'.
+
+    HTTP blob/IPC paths embed a result_id UUID — strip it so files for
+    different result_ids aggregate under a single label.
+    """
     m = re.match(r"\d+_(?P<method>[A-Z]+)_(?P<rest>.+)$", stem)
     if not m:
         return stem
     rest = m.group("rest")
     if rest.startswith("mcp_mcp_"):
-        return rest[len("mcp_mcp_"):]
+        rest = rest[len("mcp_mcp_"):]
+    rest = _UUID_RE.sub("_<id>", rest)
+    rest = rest.replace(".speedscope", "")
     return rest
 
 

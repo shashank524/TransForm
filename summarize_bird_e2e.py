@@ -55,15 +55,18 @@ def load_records(path: Path) -> tuple[List[Dict[str, Any]], Optional[Dict[str, A
 
 
 def summarize(rows: List[Dict[str, Any]], header: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    # Inline arm doesn't allocate a result_id (no /materialized POST), so
+    # widen the inclusion criterion when an inline_call_s is present.
     ok_transport = [
         r
         for r in rows
         if r.get("exec_ok")
-        and r.get("result_id")
+        and (r.get("result_id") or r.get("inline_call_s") is not None)
         and (
             r.get("baseline_fetch_s") is not None
             or r.get("enhanced_fetch_s") is not None
             or r.get("server_auto_call_s") is not None
+            or r.get("inline_call_s") is not None
         )
     ]
     exec_ok_count = sum(1 for r in rows if r.get("exec_ok"))
@@ -76,6 +79,7 @@ def summarize(rows: List[Dict[str, Any]], header: Optional[Dict[str, Any]]) -> D
     baseline_ok = [r for r in ok_transport if r.get("baseline_fetch_s") is not None]
     enhanced_ok = [r for r in ok_transport if r.get("enhanced_fetch_s") is not None]
     server_ok = [r for r in ok_transport if r.get("server_auto_call_s") is not None]
+    inline_ok = [r for r in ok_transport if r.get("inline_call_s") is not None]
 
     ratio_fetch: List[float] = []
     ratio_bytes: List[float] = []
@@ -110,6 +114,11 @@ def summarize(rows: List[Dict[str, Any]], header: Optional[Dict[str, Any]]) -> D
     for r in server_ok:
         f = r.get("server_auto_chosen_format") or "unknown"
         server_fmt_counts[f] = server_fmt_counts.get(f, 0) + 1
+
+    inline_fmt_counts: Dict[str, int] = {}
+    for r in inline_ok:
+        f = r.get("inline_chosen_format") or "unknown"
+        inline_fmt_counts[f] = inline_fmt_counts.get(f, 0) + 1
 
     summaries = [
         (r.get("summary_text") or "", r.get("summary_error"))
@@ -150,6 +159,7 @@ def summarize(rows: List[Dict[str, Any]], header: Optional[Dict[str, Any]]) -> D
         "sql_source_counts": sql_source_counts,
         "recommended_format_counts": fmt_counts,
         "server_auto_format_counts": server_fmt_counts,
+        "inline_format_counts": inline_fmt_counts,
         "median_nl2sql_s": _median(nums("nl2sql_s")),
         "p95_nl2sql_s": _p95(nums("nl2sql_s")),
         "median_baseline_fetch_s": _median([r.get("baseline_fetch_s") for r in baseline_ok]),
@@ -197,6 +207,27 @@ def summarize(rows: List[Dict[str, Any]], header: Optional[Dict[str, Any]]) -> D
             ]
         ),
         "median_server_auto_bytes": _median([r.get("server_auto_bytes") for r in server_ok]),
+        "median_inline_call_s": _median([r.get("inline_call_s") for r in inline_ok]),
+        "p95_inline_call_s": _p95([r.get("inline_call_s") for r in inline_ok]),
+        "median_inline_payload_s": _median([r.get("inline_payload_s") for r in inline_ok]),
+        "p95_inline_payload_s": _p95([r.get("inline_payload_s") for r in inline_ok]),
+        "median_inline_total_s": _median(
+            [
+                float(r.get("inline_call_s") or 0) + float(r.get("inline_payload_s") or 0)
+                for r in inline_ok
+                if r.get("inline_call_s") is not None
+                and r.get("inline_payload_s") is not None
+            ]
+        ),
+        "p95_inline_total_s": _p95(
+            [
+                float(r.get("inline_call_s") or 0) + float(r.get("inline_payload_s") or 0)
+                for r in inline_ok
+                if r.get("inline_call_s") is not None
+                and r.get("inline_payload_s") is not None
+            ]
+        ),
+        "median_inline_bytes": _median([r.get("inline_bytes") for r in inline_ok]),
         "median_baseline_bytes": _median([r.get("baseline_bytes") for r in baseline_ok]),
         "median_enhanced_bytes": _median([r.get("enhanced_bytes") for r in enhanced_ok]),
         "p95_baseline_bytes": _p95([float(r.get("baseline_bytes")) for r in baseline_ok if r.get("baseline_bytes") is not None]),
@@ -224,8 +255,9 @@ def summarize(rows: List[Dict[str, Any]], header: Optional[Dict[str, Any]]) -> D
 CACHING_SECTION = """
 ## Caching and measurement fairness
 
-- **Materialized hints:** for `POST /materialized` results, size hints for the default codec / `rows_per_chunk` are pre-computed at registration (`ResultConfig.cached_hints` in `server_app.py`), so `describe_result_formats` / `large_result_auto` avoid re-reading Parquet and skip SQLite `HintStore` on the hot path. The synthetic (no `result_id`) LRU caches in `server_app.py` still apply only when `describe_result_formats` is called without a materialized `result_id`.
-- **HTTP keep-alive** (httpx) may shave a small amount off repeated localhost RPCs; baseline and enhanced runs share the same session per query, so relative comparison on the **same** `result_id` remains meaningful.
+- **Materialized hints + payload cache (round-2):** for `POST /materialized` and `bird_query_materialize`/`bird_query_run_inline` results, both size hints AND the materialized DataFrame, Arrow table, JSON records (small payloads), and encoded Parquet/Arrow IPC bytes are pre-computed at registration (`ResultConfig.cached_*` fields in `server_app.py`), so `describe_result_formats`, `large_result_auto`, `large_json`, and the parquet/IPC HTTP blob endpoints all avoid re-reading Parquet and re-encoding on the hot path. The cache is bounded by `RESULT_CACHE_MAX_BYTES` (default 64 MB). Synthetic (no `result_id`) LRU caches still apply only when `describe_result_formats` is called without a materialized `result_id`.
+- **JSON-Schema validation backend (round-2):** the python-sdk client/server now picks the fastest available validator at import: `MCP_VALIDATOR_BACKEND={auto|jsonschema-rs|fastjsonschema|jsonschema|skip}` (or `MCP_SKIP_VALIDATE=1` for the no-op fast path). Default `auto` prefers `jsonschema-rs` then `fastjsonschema` then `jsonschema`. See `mcp.shared._validation`.
+- **HTTP keep-alive** (httpx) may shave a small amount off repeated localhost RPCs; arms share the same session per query, so relative comparison on the **same** `result_id` remains meaningful.
 - **SQLite / OS page cache** can speed up repeated access to the same DB file across queries; absolute SQL times are “warm-ish” after the first touch on a given database.
 - **Ollama** may reuse KV cache for similar prompt prefixes; NL2SQL prompts share a template, so later queries might be slightly faster. Report the model name and note whether the daemon was restarted between experiments if you need stricter cold behavior.
 """
@@ -277,6 +309,9 @@ def write_markdown(data: Dict[str, Any], path: Path) -> None:
             f"| `large_result_auto` call (server arm) | {_fmt(data.get('median_server_auto_call_s'))} | {_fmt(data.get('p95_server_auto_call_s'))} |",
             f"| Server auto payload fetch / size | {_fmt(data.get('median_server_auto_payload_s'))} | {_fmt(data.get('p95_server_auto_payload_s'))} |",
             f"| Server auto call + payload | {_fmt(data.get('median_server_auto_total_s'))} | {_fmt(data.get('p95_server_auto_total_s'))} |",
+            f"| `bird_query_run_inline` call (inline arm) | {_fmt(data.get('median_inline_call_s'))} | {_fmt(data.get('p95_inline_call_s'))} |",
+            f"| Inline payload fetch / size | {_fmt(data.get('median_inline_payload_s'))} | {_fmt(data.get('p95_inline_payload_s'))} |",
+            f"| Inline call + payload | {_fmt(data.get('median_inline_total_s'))} | {_fmt(data.get('p95_inline_total_s'))} |",
             f"| Optional summary LLM | {_fmt(data.get('median_summary_s'))} | {_fmt(data.get('p95_summary_s'))} |",
             "",
             "## Payload sizes (bytes)",
@@ -318,6 +353,23 @@ def write_markdown(data: Dict[str, Any], path: Path) -> None:
             lines.append("")
             lines.append(
                 f"- **Median payload bytes (after call):** {_fmt(data.get('median_server_auto_bytes'))}"
+            )
+
+    ifc = data.get("inline_format_counts") or {}
+    if ifc:
+        lines.extend(
+            [
+                "",
+                "## Chosen format (inline arm, `bird_query_run_inline`)",
+                "",
+            ]
+        )
+        for fmt, n in sorted(ifc.items(), key=lambda x: -x[1]):
+            lines.append(f"- `{fmt}`: {n}")
+        if data.get("median_inline_bytes") is not None:
+            lines.append("")
+            lines.append(
+                f"- **Median payload bytes (after call):** {_fmt(data.get('median_inline_bytes'))}"
             )
     lines.extend(
         [

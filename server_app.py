@@ -24,10 +24,11 @@ import os
 import re
 import time
 import uuid
+from collections import OrderedDict
 from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 import numpy as np
 import pandas as pd
@@ -105,6 +106,21 @@ class ResultConfig:
     # Wrapper carries the codec/rows_per_chunk it was computed for so
     # non-default requests fall through to the live compute path.
     cached_hints: Optional[Dict[str, Any]] = None
+    # Round-2 server payload cache (Fix F7). Each field is populated
+    # eagerly at registration time when the body is in memory, then
+    # consulted by the hot-path readers (`large_json`, parquet/IPC blob
+    # endpoints, `_resolve_dataframe`). Bounded globally by
+    # `RESULT_CACHE_MAX_BYTES` via `_PAYLOAD_CACHE_LRU`.
+    cached_dataframe: Optional["pd.DataFrame"] = None
+    cached_arrow_table: Optional["pa.Table"] = None
+    cached_json_records: Optional[List[Dict[str, Any]]] = None
+    cached_json_bytes: Optional[int] = None
+    cached_parquet_blob_bytes: Optional[bytes] = None
+    cached_arrow_ipc_blob_bytes: Optional[bytes] = None
+    # Codec the cached blob bytes were encoded under (so requests for a
+    # different codec fall through to a live encode).
+    cached_parquet_codec: Optional[Tuple[str, str]] = None
+    cached_arrow_ipc_codec: Optional[str] = None
 
 
 # Simple in-memory registry keyed by UUIDs returned from tools.
@@ -116,6 +132,201 @@ _HINTS_CACHE_MAX = 512
 _HINT_STORE = HintStore.default()
 
 _SERVER_MAB_STATE_PATH = Path(os.environ.get("FORMAT_MAB_STATE_PATH", "results/format_mab_state.json"))
+
+
+# ----- Round-2 (F7): bounded payload cache for materialized result_ids ------------
+# We keep an in-memory cache of the decoded DataFrame / Arrow table / encoded
+# bytes for each materialized result_id, so the hot paths
+# (`large_json`, `large_parquet_blob`, `large_arrow_ipc_blob`, the HTTP blob
+# endpoints, and `describe_result_formats` via `_resolve_dataframe`) avoid
+# `pd.read_parquet` and re-encoding on every request.
+#
+# Bounds: total cached bytes across all entries kept under
+# `RESULT_CACHE_MAX_BYTES` (default 64 MB). When a registration would push
+# the total past the cap, we evict the least recently used entries' cache
+# fields (keeping the ResultConfig and its `cached_hints` so describe still
+# works fast — only the bigger payload buffers are dropped).
+_PAYLOAD_CACHE_LRU: "OrderedDict[str, int]" = OrderedDict()
+_PAYLOAD_CACHE_TOTAL_BYTES: int = 0
+
+
+def _result_cache_max_bytes() -> int:
+    raw = os.environ.get("RESULT_CACHE_MAX_BYTES", "").strip()
+    if raw:
+        try:
+            v = int(raw)
+            return max(0, v)
+        except ValueError:
+            pass
+    return 64 * 1024 * 1024  # 64 MB default
+
+
+def _payload_cache_clear_entry(result_id: str) -> None:
+    """Drop cached payload buffers (but keep ResultConfig + cached_hints)."""
+    global _PAYLOAD_CACHE_TOTAL_BYTES
+    cfg = RESULT_REGISTRY.get(result_id)
+    prev = _PAYLOAD_CACHE_LRU.pop(result_id, 0)
+    _PAYLOAD_CACHE_TOTAL_BYTES -= prev
+    if _PAYLOAD_CACHE_TOTAL_BYTES < 0:
+        _PAYLOAD_CACHE_TOTAL_BYTES = 0
+    if cfg is not None:
+        cfg.cached_dataframe = None
+        cfg.cached_arrow_table = None
+        cfg.cached_json_records = None
+        cfg.cached_parquet_blob_bytes = None
+        cfg.cached_arrow_ipc_blob_bytes = None
+        cfg.cached_parquet_codec = None
+        cfg.cached_arrow_ipc_codec = None
+
+
+def _payload_cache_record(result_id: str, approx_bytes: int) -> None:
+    """Mark a result_id as the most-recently-used payload cache entry."""
+    global _PAYLOAD_CACHE_TOTAL_BYTES
+    prev = _PAYLOAD_CACHE_LRU.pop(result_id, 0)
+    _PAYLOAD_CACHE_TOTAL_BYTES -= prev
+    _PAYLOAD_CACHE_LRU[result_id] = int(approx_bytes)
+    _PAYLOAD_CACHE_TOTAL_BYTES += int(approx_bytes)
+    cap = _result_cache_max_bytes()
+    if cap <= 0:
+        return
+    while _PAYLOAD_CACHE_TOTAL_BYTES > cap and _PAYLOAD_CACHE_LRU:
+        oldest_id, _ = next(iter(_PAYLOAD_CACHE_LRU.items()))
+        if oldest_id == result_id:
+            break  # don't evict the entry we just added
+        _payload_cache_clear_entry(oldest_id)
+
+
+def _payload_cache_touch(result_id: str) -> None:
+    """Mark an existing entry as recently used without changing its size."""
+    if result_id in _PAYLOAD_CACHE_LRU:
+        _PAYLOAD_CACHE_LRU.move_to_end(result_id)
+
+
+def _approx_payload_bytes(
+    df: Optional["pd.DataFrame"],
+    parquet_bytes: Optional[bytes],
+    ipc_bytes: Optional[bytes],
+    json_records: Optional[List[Dict[str, Any]]],
+) -> int:
+    n = 0
+    if df is not None:
+        try:
+            n += int(df.memory_usage(deep=True).sum())
+        except Exception:
+            pass
+    if parquet_bytes is not None:
+        n += len(parquet_bytes)
+    if ipc_bytes is not None:
+        n += len(ipc_bytes)
+    if json_records is not None:
+        # Cheap upper-ish bound: 64 B per cell.
+        n += len(json_records) * (len(json_records[0]) if json_records else 0) * 64
+    return n
+
+
+def _populate_materialized_caches(
+    cfg: ResultConfig,
+    *,
+    result_id: str,
+    df: pd.DataFrame,
+    table: Optional[pa.Table] = None,
+    parquet_bytes: Optional[bytes] = None,
+    rows_per_chunk: int = 8192,
+) -> None:
+    """
+    F2 + F7 + F10: at registration time, populate `cached_hints` and the
+    payload caches (DataFrame, Arrow table, JSON records, encoded blob bytes)
+    for the default codec tuple, then record the entry size in the LRU.
+
+    Called from both `register_materialized_endpoint` (POST /materialized)
+    and `bird_query_materialize` so every materialized result_id starts
+    primed. Best-effort: any single sub-step failure leaves that cache
+    field as `None` and falls back to the live compute path.
+    """
+    default_comp = _get_default_compression()
+    default_enc_strat = _get_default_encoding_strategy()
+    default_ipc_comp = _get_default_arrow_ipc_compression()
+
+    if table is None:
+        try:
+            table = pa.Table.from_pandas(df, preserve_index=False)
+        except Exception:
+            table = None
+
+    # F7: store DataFrame + Arrow table.
+    cfg.cached_dataframe = df
+    cfg.cached_arrow_table = table
+
+    # F2: hints (re-uses table when present so we don't re-encode).
+    try:
+        hints = _compute_tabular_size_hints_from_df(
+            df,
+            rows_per_chunk=rows_per_chunk,
+            comp=default_comp,
+            enc_strat=default_enc_strat,
+            ipc_comp=default_ipc_comp,
+            table=table,
+        )
+        cfg.cached_hints = {
+            "rows_per_chunk": int(rows_per_chunk),
+            "parquet_compression": default_comp,
+            "parquet_encoding_strategy": default_enc_strat,
+            "arrow_ipc_compression": default_ipc_comp,
+            "hints": hints,
+        }
+    except Exception:
+        cfg.cached_hints = None
+
+    # F7: cache JSON records when the payload is small enough that storing
+    # them is cheap (this is the BIRD common case: <= SMALL_PAYLOAD_CELLS).
+    try:
+        n_rows = len(df)
+        n_cols = len(df.columns)
+        if n_rows * n_cols <= SMALL_PAYLOAD_CELLS:
+            cfg.cached_json_records = df.to_dict(orient="records")
+            try:
+                cfg.cached_json_bytes = len(
+                    json.dumps(cfg.cached_json_records).encode("utf-8")
+                )
+            except Exception:
+                cfg.cached_json_bytes = None
+    except Exception:
+        cfg.cached_json_records = None
+
+    # F7: cache encoded Parquet bytes for the default codec. If the caller
+    # already had encoded bytes (e.g., bird_query_materialize re-uses the
+    # bytes it just wrote to disk), prefer those.
+    try:
+        if parquet_bytes is not None:
+            cfg.cached_parquet_blob_bytes = parquet_bytes
+            cfg.cached_parquet_codec = (default_comp, default_enc_strat)
+        elif table is not None:
+            enc = _encode_parquet(table, default_comp, default_enc_strat)
+            cfg.cached_parquet_blob_bytes = enc
+            cfg.cached_parquet_codec = (default_comp, default_enc_strat)
+    except Exception:
+        cfg.cached_parquet_blob_bytes = None
+        cfg.cached_parquet_codec = None
+
+    # F7: cache encoded Arrow IPC bytes for the default codec.
+    try:
+        if table is not None:
+            cfg.cached_arrow_ipc_blob_bytes = _encode_arrow_ipc_file(
+                table, default_ipc_comp,
+            )
+            cfg.cached_arrow_ipc_codec = default_ipc_comp
+    except Exception:
+        cfg.cached_arrow_ipc_blob_bytes = None
+        cfg.cached_arrow_ipc_codec = None
+
+    # Record approximate memory footprint and evict LRU if needed.
+    approx = _approx_payload_bytes(
+        cfg.cached_dataframe,
+        cfg.cached_parquet_blob_bytes,
+        cfg.cached_arrow_ipc_blob_bytes,
+        cfg.cached_json_records,
+    )
+    _payload_cache_record(result_id, approx)
 
 
 def _hints_cache_get(key_json: str) -> Optional[Dict[str, Any]]:
@@ -374,13 +585,33 @@ def _load_materialized_dataframe(
 def _resolve_dataframe(
     config: ResultConfig, *, offset: int = 0, limit: int | None = None,
 ) -> pd.DataFrame:
-    """Return the DataFrame backing a ResultConfig — materialized or generated."""
+    """Return the DataFrame backing a ResultConfig — materialized or generated.
+
+    Round-2 (F7): when the materialized DataFrame is cached on the
+    `ResultConfig` (populated at registration), serve from cache and skip
+    the `pd.read_parquet` round-trip. Slicing for offset/limit happens on
+    the cached DataFrame.
+    """
+    if config.cached_dataframe is not None:
+        df = config.cached_dataframe
+        if offset > 0 or limit is not None:
+            stop = (offset + limit) if limit is not None else None
+            df = df.iloc[offset:stop]
+        return df
     if config.materialized_path is not None:
         return _load_materialized_dataframe(
             config.materialized_path, offset=offset, limit=limit,
         )
     n = limit if limit is not None else config.n_rows
     return _generate_dataframe(n_rows=n, n_cols=config.n_cols, offset=offset)
+
+
+def _resolve_arrow_table(config: ResultConfig) -> pa.Table:
+    """Return the Arrow table backing a materialized ResultConfig (cache-first)."""
+    if config.cached_arrow_table is not None:
+        return config.cached_arrow_table
+    df = _resolve_dataframe(config)
+    return pa.Table.from_pandas(df, preserve_index=False)
 
 
 # ----- Parquet compression / encoding config ----------------------------------------
@@ -995,13 +1226,28 @@ def bird_query_materialize(
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(pq_bytes)
 
-    RESULT_REGISTRY[mid] = ResultConfig(
+    cfg = ResultConfig(
         n_rows=n_rows,
         n_cols=n_cols,
         compression=comp,
         encoding_strategy=enc_strat,
         materialized_path=path,
     )
+    # F7 + F10: pre-populate hints and payload caches so describe / large_json
+    # / large_result_auto / blob endpoints all skip the Parquet re-read. We
+    # already have `table` and `pq_bytes` at the default codec; reuse them.
+    try:
+        _populate_materialized_caches(
+            cfg,
+            result_id=mid,
+            df=df,
+            table=table,
+            parquet_bytes=pq_bytes,
+        )
+    except Exception:
+        cfg.cached_hints = None
+
+    RESULT_REGISTRY[mid] = cfg
     return {"result_id": mid, "n_rows": n_rows, "n_cols": n_cols}
 
 
@@ -1039,6 +1285,158 @@ def bird_query_auto(
 
 
 @mcp.tool()
+def bird_query_run_inline(
+    db_id: str,
+    sql: str,
+    optimization_target: Optional[str] = None,
+    rows_per_chunk: int = 8192,
+    prefer_streaming: bool = False,
+    use_mab: bool = False,
+    max_rows: int = 500_000,
+) -> CallToolResult:
+    """
+    Round-2 (F9): execute BIRD SQL + select format + return payload in a *single*
+    MCP round trip, avoiding the wasted Parquet disk write when JSON wins.
+
+    Workflow:
+
+    1. Execute SQL on the SQLite db.
+    2. Build size hints in memory (no disk).
+    3. Run the same `select_format_with_hints` selector as `large_result_auto`.
+    4. If chosen format is JSON: return inline records (no parquet, no
+       result_id allocated, no disk I/O). This is the BIRD common case.
+    5. Otherwise: persist parquet, register a ResultConfig with caches
+       primed, and return a descriptor whose shape matches `large_result_auto`.
+
+    Compared to `bird_query_auto` this saves one parquet encode + one disk
+    write on the JSON path (which is ~99% of BIRD queries).
+    """
+    db_path = _resolve_bird_sqlite_path(db_id)
+    if db_path is None:
+        raise ValueError(
+            f"Could not resolve BIRD sqlite for db_id={db_id!r}. "
+            f"Set BIRD_SQLITE_ROOT."
+        )
+    df = _execute_sqlite_query_to_df(
+        db_path, bird_sql_for_sqlite(sql), max_rows=max_rows,
+    )
+    if df.empty:
+        raise ValueError("Empty result")
+
+    n_rows = int(len(df))
+    n_cols = int(len(df.columns))
+
+    # Hints in memory — same logic as `_compute_tabular_size_hints_from_df`,
+    # but keyed off the live DataFrame (no Parquet round trip).
+    comp = _get_default_compression()
+    enc_strat = _get_default_encoding_strategy()
+    ipc_comp = _get_default_arrow_ipc_compression()
+    table = pa.Table.from_pandas(df, preserve_index=False)
+    hints = _compute_tabular_size_hints_from_df(
+        df,
+        rows_per_chunk=rows_per_chunk,
+        comp=comp,
+        enc_strat=enc_strat,
+        ipc_comp=ipc_comp,
+        table=table,
+    )
+    resolved_rows = int(hints.get("resolved_n_rows") or n_rows)
+    resolved_cols = int(hints.get("resolved_n_cols") or n_cols)
+
+    if optimization_target:
+        try:
+            sel_target = OptimizationTarget(optimization_target.strip().lower())
+        except ValueError:
+            sel_target = get_default_target()
+    else:
+        sel_target = get_default_target()
+
+    sel_ctx = SelectionContext(
+        n_rows=resolved_rows,
+        n_cols=resolved_cols,
+        target=sel_target,
+        prefer_streaming=prefer_streaming,
+    )
+    hints_for_select: Dict[str, Any] = {
+        "json_bytes": int(hints["json_bytes"]),
+        "parquet_bytes": int(hints["parquet_bytes"]),
+        "parquet_stream_first_chunk_bytes": int(hints["parquet_stream_first_chunk_bytes"]),
+        "arrow_ipc_bytes": int(hints["arrow_ipc_bytes"]),
+        "arrow_ipc_stream_first_chunk_bytes": int(hints["arrow_ipc_stream_first_chunk_bytes"]),
+    }
+    mab_state = load_mab_state(_SERVER_MAB_STATE_PATH) if use_mab else None
+    chosen = (
+        select_format_with_mab(sel_ctx, hints_for_select, mab_state)
+        if use_mab
+        else select_format_with_hints(sel_ctx, hints_for_select)
+    )
+
+    # Fast path: inline JSON without a parquet disk write or result_id alloc.
+    if chosen == "json":
+        try:
+            cap = _json_cells_cap()
+            cells = resolved_rows * resolved_cols
+            if cap is not None and cells > cap:
+                raise ValueError(
+                    f"Result too large for JSON ({cells} cells > {cap})"
+                )
+            records = df.to_dict(orient="records")
+        except Exception:
+            chosen = "parquet_blob"
+        else:
+            structured = {
+                "payload_kind": "tabular",
+                "chosen_format": "json",
+                "optimization_target": sel_target.value,
+                "payload": {"kind": "json", "records": records},
+                "decode": {"encoding": "json_records", "transport": "inline"},
+            }
+            return CallToolResult(
+                content=[TextContent(type="text", text="Returning JSON records (json).")],
+                structured_content=structured,
+            )
+
+    # Slow path: chosen format needs a backing result_id + disk file. Persist
+    # parquet now, prime caches, and delegate to large_result_auto's
+    # descriptor branches via the `result_id` we just allocated.
+    pq_bytes = _encode_parquet(table, comp, enc_strat)
+    results_dir = ROOT / "results"
+    mid = str(uuid.uuid4())
+    path = results_dir / "materialized" / f"bird_inline_{mid}.parquet"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(pq_bytes)
+
+    cfg = ResultConfig(
+        n_rows=n_rows,
+        n_cols=n_cols,
+        compression=comp,
+        encoding_strategy=enc_strat,
+        materialized_path=path,
+    )
+    try:
+        _populate_materialized_caches(
+            cfg,
+            result_id=mid,
+            df=df,
+            table=table,
+            parquet_bytes=pq_bytes,
+        )
+    except Exception:
+        cfg.cached_hints = None
+    RESULT_REGISTRY[mid] = cfg
+
+    return large_result_auto(
+        n_rows=resolved_rows,
+        n_cols=resolved_cols,
+        rows_per_chunk=rows_per_chunk,
+        result_id=mid,
+        optimization_target=optimization_target,
+        prefer_streaming=prefer_streaming,
+        use_mab=use_mab,
+    )
+
+
+@mcp.tool()
 def large_json(
     n_rows: int,
     n_cols: int,
@@ -1055,6 +1453,10 @@ def large_json(
         config = RESULT_REGISTRY.get(result_id)
         if config is None:
             raise ValueError(f"Unknown result_id: {result_id}")
+        # F7: serve the pre-built records list when present (BIRD hot path).
+        if config.cached_json_records is not None:
+            _payload_cache_touch(result_id)
+            return config.cached_json_records
         df = _resolve_dataframe(config)
         cells = len(df) * len(df.columns)
         cap = _json_cells_cap()
@@ -2162,9 +2564,15 @@ async def parquet_blob_endpoint(request) -> Response:
     comp = config.compression or _get_default_compression()
     enc_strat = config.encoding_strategy or _get_default_encoding_strategy()
 
-    if config.materialized_path is not None:
-        df = _load_materialized_dataframe(config.materialized_path)
-        table = pa.Table.from_pandas(df, preserve_index=False)
+    if (
+        config.cached_parquet_blob_bytes is not None
+        and config.cached_parquet_codec == (comp, enc_strat)
+    ):
+        # F7: serve pre-encoded Parquet bytes from registration.
+        data = config.cached_parquet_blob_bytes
+        _payload_cache_touch(result_id)
+    elif config.materialized_path is not None:
+        table = _resolve_arrow_table(config)
         data = _encode_parquet(table, comp, enc_strat)
     else:
         data = _get_parquet_blob_bytes(config.n_rows, config.n_cols, comp, enc_strat)
@@ -2198,8 +2606,9 @@ def _stream_parquet_chunks(config: ResultConfig):
     enc_strat = config.encoding_strategy or _get_default_encoding_strategy()
     offset = 0
 
-    if config.materialized_path is not None:
-        full_df = _load_materialized_dataframe(config.materialized_path)
+    if config.materialized_path is not None or config.cached_dataframe is not None:
+        # F7: prefer the cached DataFrame; fall through to disk read when missing.
+        full_df = _resolve_dataframe(config)
         total_rows = len(full_df)
         while offset < total_rows:
             this_rows = min(rows_per_chunk, total_rows - offset)
@@ -2259,9 +2668,15 @@ async def ipc_blob_endpoint(request) -> Response:
     if ipc_comp not in VALID_ARROW_IPC_COMPRESSIONS:
         ipc_comp = "none"
 
-    if config.materialized_path is not None:
-        df = _load_materialized_dataframe(config.materialized_path)
-        table = pa.Table.from_pandas(df, preserve_index=False)
+    if (
+        config.cached_arrow_ipc_blob_bytes is not None
+        and config.cached_arrow_ipc_codec == ipc_comp
+    ):
+        # F7: serve pre-encoded Arrow IPC bytes from registration.
+        data = config.cached_arrow_ipc_blob_bytes
+        _payload_cache_touch(result_id)
+    elif config.materialized_path is not None:
+        table = _resolve_arrow_table(config)
         data = _encode_arrow_ipc_file(table, ipc_comp)
     else:
         data = _get_arrow_ipc_blob_bytes(
@@ -2296,8 +2711,8 @@ def _stream_arrow_ipc_chunks(config: ResultConfig):
         ipc_comp = "none"
     offset = 0
 
-    if config.materialized_path is not None:
-        full_df = _load_materialized_dataframe(config.materialized_path)
+    if config.materialized_path is not None or config.cached_dataframe is not None:
+        full_df = _resolve_dataframe(config)
         total_rows = len(full_df)
         while offset < total_rows:
             this_rows = min(rows_per_chunk, total_rows - offset)
@@ -2447,31 +2862,19 @@ async def register_materialized_endpoint(request) -> Response:
         materialized_path=path,
     )
 
-    # Fix 2: pre-compute size hints for the default codec / rows_per_chunk
-    # tuple while the Parquet body is still in memory. This eliminates the
-    # describe-time re-read + encode round trip on the hot path.
+    # Fix 2 + F7: pre-compute size hints AND payload caches while the
+    # Parquet body is still in memory. This eliminates the describe-time
+    # re-read + encode round trip on the hot path AND lets every later
+    # `large_json` / parquet/IPC blob fetch serve from cache.
     try:
         table = pf.read()  # uses the already-opened ParquetFile
         df = table.to_pandas()
-        default_comp = _get_default_compression()
-        default_enc_strat = _get_default_encoding_strategy()
-        default_ipc_comp = _get_default_arrow_ipc_compression()
-        default_rows_per_chunk = 8192  # matches describe_result_formats default
-        hints = _compute_tabular_size_hints_from_df(
-            df,
-            rows_per_chunk=default_rows_per_chunk,
-            comp=default_comp,
-            enc_strat=default_enc_strat,
-            ipc_comp=default_ipc_comp,
+        _populate_materialized_caches(
+            cfg,
+            result_id=result_id,
+            df=df,
             table=table,
         )
-        cfg.cached_hints = {
-            "rows_per_chunk": int(default_rows_per_chunk),
-            "parquet_compression": default_comp,
-            "parquet_encoding_strategy": default_enc_strat,
-            "arrow_ipc_compression": default_ipc_comp,
-            "hints": hints,
-        }
     except Exception:
         # Pre-computation is best-effort; on failure the describe path falls
         # back to live computation (slower but correct).

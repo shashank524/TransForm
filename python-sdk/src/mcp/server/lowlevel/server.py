@@ -546,9 +546,23 @@ class Server(Generic[LifespanResultT, RequestT]):
 
                     # input validation
                     if validate_input and tool:
+                        # Local fork point (MultiModalMCP): use the shared
+                        # backend chain (skip > jsonschema-rs > fastjsonschema
+                        # > jsonschema). See mcp.shared._validation.
+                        from mcp.shared._validation import (
+                            ValidationFailed as _MMValidationFailed,
+                        )
+                        from mcp.shared._validation import (
+                            get_validator as _mm_get_validator,
+                        )
+
+                        in_validator, _ = _mm_get_validator(
+                            tool.input_schema,
+                            schema_id=f"server::{tool_name}::input",
+                        )
                         try:
-                            jsonschema.validate(instance=arguments, schema=tool.input_schema)
-                        except jsonschema.ValidationError as e:
+                            in_validator(arguments)
+                        except _MMValidationFailed as e:
                             return self._make_error_result(f"Input validation error: {e.message}")
 
                     # tool call
@@ -583,9 +597,21 @@ class Server(Generic[LifespanResultT, RequestT]):
                                 "Output validation error: outputSchema defined but no structured output returned"
                             )
                         else:
+                            # Local fork point (MultiModalMCP): shared backend chain.
+                            from mcp.shared._validation import (
+                                ValidationFailed as _MMValidationFailed,
+                            )
+                            from mcp.shared._validation import (
+                                get_validator as _mm_get_validator,
+                            )
+
+                            out_validator, _ = _mm_get_validator(
+                                tool.output_schema,
+                                schema_id=f"server::{tool_name}::output",
+                            )
                             try:
-                                jsonschema.validate(instance=maybe_structured_content, schema=tool.output_schema)
-                            except jsonschema.ValidationError as e:
+                                out_validator(maybe_structured_content)
+                            except _MMValidationFailed as e:
                                 return self._make_error_result(f"Output validation error: {e.message}")
 
                     # result

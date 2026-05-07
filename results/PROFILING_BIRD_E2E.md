@@ -402,3 +402,70 @@ overall transport story.
   - [bird_e2e_dev_full_gold_postfix_server.jsonl](bird_e2e_dev_full_gold_postfix_server.jsonl),
   [bird_e2e_dev_full_gold_postfix_server_summary.md](bird_e2e_dev_full_gold_postfix_server_summary.md)
 
+## Round-2 results (perf/round2 branch)
+
+Round-2 builds on the round-1 fixes above. Full design and citations are
+in [PERF_ROUND2.md](PERF_ROUND2.md). Summary of the four levers:
+
+- **F7** — Server payload cache: extend `ResultConfig` with
+`cached_dataframe`, `cached_arrow_table`, `cached_json_records`,
+`cached_parquet_blob_bytes`, `cached_arrow_ipc_blob_bytes`. Populate
+at registration; consult in every hot-path reader; bound by
+`RESULT_CACHE_MAX_BYTES` (default 64 MB).
+- **F8** — Compiled-validator chain in `python-sdk`:
+`MCP_VALIDATOR_BACKEND={auto|jsonschema-rs|fastjsonschema|jsonschema|skip}`,
+default `auto`. New shared module
+`[mcp.shared._validation](../python-sdk/src/mcp/shared/_validation.py)`.
+- **F9** — New tool `bird_query_run_inline`: SQL exec + format select
+  - payload return in one MCP round trip; skips `POST /materialized`
+  and the parquet disk write when JSON wins (BIRD: 1410/1534 = 92%).
+- **F10** — Mirror the F2 hint pre-computation into
+`bird_query_materialize` so `--arms server` sees true cache hits
+on first describe.
+
+### Median end-to-end latency, BIRD dev gold (1534 queries)
+
+
+| Arm                                       | Round-1 (ms) | Round-2 (ms) | Δ                           |
+| ----------------------------------------- | ------------ | ------------ | --------------------------- |
+| baseline (`register` + `large_json`)      | 5.25         | 5.18         | -0.07                       |
+| enhanced (`register` + describe + fetch)  | 7.55         | 7.46         | -0.09                       |
+| server (`register` + `large_result_auto`) | 5.05         | 5.05         | 0                           |
+| **inline (`bird_query_run_inline`)**      | **n/a**      | **3.94**     | **-1.11 vs round-1 server** |
+
+
+The big win is the new `inline` arm at **3.94 ms median** — a 22%
+saving over round-1's best (`server` at 5.05 ms) and a 47% saving over
+the "describe + enhanced" path that round-1 was optimising. It does
+this by collapsing the `POST /materialized` HTTP round trip into the
+same MCP call as the SQL execution, and by skipping the parquet disk
+write when JSON is the chosen format.
+
+### Validator-backend sweep (50q `--arms inline` slice)
+
+
+| Backend                            | Median ms |
+| ---------------------------------- | --------- |
+| `skip`                             | 8.42      |
+| `jsonschema-rs` (default)          | 8.10      |
+| `fastjsonschema`                   | 7.49      |
+| `jsonschema` (round-1 cached path) | 8.15      |
+
+
+Differences for BIRD's tiny payloads collapse into ~1 ms; the chain
+is mainly insurance for larger schemas / payloads. Default stays at
+`auto` (jsonschema-rs first) to keep Draft 2020-12 schemas correct.
+
+### Round-2 artifact index
+
+- Branch: `perf/round2` (off `main` initial commit).
+- Doc: [PERF_ROUND2.md](PERF_ROUND2.md).
+- Profiles (50q): [profiling/client_round2/](profiling/client_round2/),
+[profiling/server_round2/](profiling/server_round2/),
+[profiling/server_round2_aggregate.txt](profiling/server_round2_aggregate.txt).
+- Full BIRD dev round-2 (no profiler):
+  - [bird_e2e_dev_full_gold_round2_both.md](bird_e2e_dev_full_gold_round2_both.md)
+  - [bird_e2e_dev_full_gold_round2_server.md](bird_e2e_dev_full_gold_round2_server.md)
+  - [bird_e2e_dev_full_gold_round2_inline.md](bird_e2e_dev_full_gold_round2_inline.md)
+- Validator sweep (50q): `bird_e2e_50_round2_inline_{skip,jsonschema-rs,fastjsonschema,jsonschema}.jsonl`.
+

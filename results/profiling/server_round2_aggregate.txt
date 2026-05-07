@@ -1,0 +1,14 @@
+
+== results/profiling/server_round2 ==
+route/tool                                     count  median_ms     max_ms   total_ms
+large_json                                      4066       5.42    1374.54   33553.10
+large_result_auto                               2006       5.31     199.24   12630.26
+describe_result_formats                         2102       5.44      26.57   12278.95
+materialized                                    4158       2.02      35.14    9792.90
+bird_query_run_inline                            250       6.76      91.73    3949.20
+large_parquet_blob                               188       5.44      21.40    1108.05
+blobs_<id>.parquet                               370       1.84     178.80    1036.42
+tools_list                                        12       4.99       5.67      59.72
+initialize                                        12       4.47       6.60      56.76
+notifications_initialized                         12       3.96       4.38      47.43
+mcp                                                1       0.97       0.97       0.97

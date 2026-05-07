@@ -375,6 +375,42 @@ async def call_bird_query_auto(
     return data
 
 
+async def call_bird_query_run_inline(
+    session: ClientSession,
+    *,
+    db_id: str,
+    sql: str,
+    optimization_target: Optional[str] = None,
+    rows_per_chunk: int = 8192,
+    prefer_streaming: bool = False,
+    use_mab: bool = False,
+    max_rows: int = 500_000,
+) -> Dict[str, Any]:
+    """
+    Round-2 (F9): execute SQL + select format + return payload in a single
+    MCP round trip; matches large_result_auto's structured_content shape.
+
+    Skips the parquet disk write entirely when JSON wins (BIRD common case).
+    """
+    args: Dict[str, Any] = {
+        "db_id": db_id,
+        "sql": sql,
+        "optimization_target": optimization_target,
+        "rows_per_chunk": rows_per_chunk,
+        "prefer_streaming": prefer_streaming,
+        "use_mab": use_mab,
+        "max_rows": max_rows,
+    }
+    args = {k: v for k, v in args.items() if v is not None}
+    result = await session.call_tool("bird_query_run_inline", arguments=args)
+    data = result.structured_content or {}
+    if isinstance(data, dict) and "result" in data and isinstance(data.get("result"), dict):
+        data = data["result"]
+    if not isinstance(data, dict):
+        raise RuntimeError(f"Unexpected structured_content from bird_query_run_inline: {data}")
+    return data
+
+
 async def call_record_format_outcome(
     session: ClientSession,
     n_rows: int,

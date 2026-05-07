@@ -132,11 +132,6 @@ class ClientSession(
         self._logging_callback = logging_callback or _default_logging_callback
         self._message_handler = message_handler or _default_message_handler
         self._tool_output_schemas: dict[str, dict[str, Any] | None] = {}
-        # Local fork point (MultiModalMCP): cache compiled jsonschema validators
-        # per tool. jsonschema.validate() recompiles + meta-validates on every
-        # call, which is the dominant per-tool-call cost in our profiling
-        # (~6-8 ms / call). See results/PROFILING_BIRD_E2E.md "Fix 6".
-        self._tool_output_validators: dict[str, Any] = {}
         self._server_capabilities: types.ServerCapabilities | None = None
         self._experimental_features: ExperimentalClientFeatures | None = None
 
@@ -329,15 +324,13 @@ class ClientSession(
 
     async def _validate_tool_result(self, name: str, result: types.CallToolResult) -> None:
         """Validate the structured content of a tool result against its output schema."""
-        # Local fork point (MultiModalMCP): allow trusted-server bypass.
-        # MCP_SKIP_VALIDATE=1 turns this into a no-op so benchmark harnesses
-        # can measure transport+selection without jsonschema overhead.
-        import os as _os
-        if _os.environ.get("MCP_SKIP_VALIDATE", "").strip().lower() in {"1", "true", "yes"}:
-            return
+        # Local fork point (MultiModalMCP): delegate to the shared validation
+        # backend chain (skip > jsonschema-rs > fastjsonschema > jsonschema).
+        # MCP_SKIP_VALIDATE / MCP_VALIDATOR_BACKEND env knobs documented in
+        # mcp.shared._validation.
+        from mcp.shared._validation import ValidationFailed, get_validator
 
         if name not in self._tool_output_schemas:
-            # refresh output schema cache
             await self.list_tools()
 
         output_schema = None
@@ -346,35 +339,19 @@ class ClientSession(
         else:
             logger.warning(f"Tool {name} not listed by server, cannot validate any structured content")
 
-        if output_schema is not None:
-            from jsonschema import SchemaError, ValidationError
-            from jsonschema.validators import validator_for
+        if output_schema is None:
+            return
 
-            if result.structured_content is None:
-                raise RuntimeError(
-                    f"Tool {name} has an output schema but did not return structured content"
-                )  # pragma: no cover
+        if result.structured_content is None:
+            raise RuntimeError(
+                f"Tool {name} has an output schema but did not return structured content"
+            )  # pragma: no cover
 
-            # Local fork point (MultiModalMCP): cache the compiled validator
-            # per (session, tool) so we don't pay schema compilation +
-            # meta-schema check on every tool call. The cache is invalidated
-            # in list_tools() when the schema cache itself refreshes.
-            validator = self._tool_output_validators.get(name)
-            if validator is None:
-                try:
-                    validator_cls = validator_for(output_schema)
-                    validator_cls.check_schema(output_schema)
-                    validator = validator_cls(output_schema)
-                except SchemaError as e:  # pragma: no cover
-                    raise RuntimeError(f"Invalid schema for tool {name}: {e}")  # pragma: no cover
-                self._tool_output_validators[name] = validator
-
-            try:
-                validator.validate(result.structured_content)
-            except ValidationError as e:
-                raise RuntimeError(f"Invalid structured content returned by tool {name}: {e}")
-            except SchemaError as e:  # pragma: no cover
-                raise RuntimeError(f"Invalid schema for tool {name}: {e}")  # pragma: no cover
+        validator, _backend = get_validator(output_schema, schema_id=f"client::{name}")
+        try:
+            validator(result.structured_content)
+        except ValidationFailed as e:
+            raise RuntimeError(f"Invalid structured content returned by tool {name}: {e.message}")
 
     async def list_prompts(self, *, params: types.PaginatedRequestParams | None = None) -> types.ListPromptsResult:
         """Send a prompts/list request.
@@ -432,13 +409,15 @@ class ClientSession(
 
         # Cache tool output schemas for future validation
         # Note: don't clear the cache, as we may be using a cursor
+        from mcp.shared._validation import invalidate_schema
+
         for tool in result.tools:
             previous_schema = self._tool_output_schemas.get(tool.name)
             self._tool_output_schemas[tool.name] = tool.output_schema
-            # Local fork point (MultiModalMCP): invalidate per-tool validator
-            # cache when the schema actually changes (or first time we see it).
+            # Local fork point (MultiModalMCP): drop the per-tool validator
+            # entry in the shared backend cache when the schema changes.
             if previous_schema != tool.output_schema:
-                self._tool_output_validators.pop(tool.name, None)
+                invalidate_schema(f"client::{tool.name}")
 
         return result
 
