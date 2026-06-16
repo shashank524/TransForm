@@ -25,3 +25,7 @@ results/format_hints.sqlite*
 .idea/
 .vscode/
 *.swp
+
+# Java build output
+java-server/target/
+java-sdk/**/target/
