@@ -9,22 +9,13 @@ LLM-backed workflow.
 from __future__ import annotations
 
 import os
-import sys
 from contextlib import asynccontextmanager
-from pathlib import Path
 from typing import Any, AsyncIterator, Dict, Optional
 
-# Normalized hints dict for format_selector.select_format_with_hints
-FormatHints = Dict[str, Any]  # json_bytes, parquet_bytes, parquet_stream_first_chunk_bytes,
-# arrow_ipc_bytes, arrow_ipc_stream_first_chunk_bytes (optional)
+# Normalized hints dict for server-side format selection responses
+FormatHints = Dict[str, Any]
 
 import httpx
-
-# Ensure local python-sdk is on path when this package is used from project root
-ROOT = Path(__file__).resolve().parent.parent
-PYTHON_SDK_SRC = ROOT / "python-sdk" / "src"
-if str(PYTHON_SDK_SRC) not in sys.path:
-    sys.path.insert(0, str(PYTHON_SDK_SRC))
 
 from mcp import ClientSession  # type: ignore
 from mcp.client.streamable_http import streamable_http_client  # type: ignore
@@ -33,9 +24,15 @@ from mcp.client.streamable_http import streamable_http_client  # type: ignore
 # Env var for API key; when set, client sends Authorization: Bearer <key> on all requests
 MCP_API_KEY_ENV = "MCP_API_KEY"
 
-# Default base URL when server is run with: uvicorn server_app:app --reload
-# The streamable HTTP app is mounted at /mcp and exposes /mcp, so full path is /mcp/mcp
+# Default MCP URL for the Java server (streamable HTTP at /mcp/mcp)
 DEFAULT_MCP_URL = "http://localhost:8000/mcp/mcp"
+
+
+def _unwrap_structured_content(data: Any) -> Any:
+    """MCP may wrap non-object tool returns as {\"result\": ...}."""
+    if isinstance(data, dict) and "result" in data and len(data) == 1:
+        return data["result"]
+    return data
 
 
 def _auth_headers(api_key: Optional[str]) -> Dict[str, str]:
@@ -88,7 +85,7 @@ async def call_large_json(
     if result_id is not None:
         args["result_id"] = result_id
     result = await session.call_tool("large_json", arguments=args)
-    return result.structured_content
+    return _unwrap_structured_content(result.structured_content)
 
 
 async def call_large_parquet_blob(
@@ -308,6 +305,41 @@ async def call_large_result_auto(
     data = result.structured_content or {}
     if not isinstance(data, dict):
         raise RuntimeError(f"Unexpected structured_content from large_result_auto: {data}")
+    return data
+
+
+async def call_describe_and_fetch_result(
+    session: ClientSession,
+    n_rows: int,
+    n_cols: int,
+    rows_per_chunk: int = 8192,
+    *,
+    result_id: Optional[str] = None,
+    optimization_target: Optional[str] = None,
+    prefer_streaming: bool = False,
+    use_mab: bool = False,
+) -> Dict[str, Any]:
+    """
+    Call describe_and_fetch_result (fused describe + selection + payload).
+    Same structured_content shape as large_result_auto.
+    """
+    args: Dict[str, Any] = {
+        "n_rows": n_rows,
+        "n_cols": n_cols,
+        "rows_per_chunk": rows_per_chunk,
+        "prefer_streaming": prefer_streaming,
+        "use_mab": use_mab,
+    }
+    if result_id is not None:
+        args["result_id"] = result_id
+    if optimization_target is not None:
+        args["optimization_target"] = optimization_target
+    result = await session.call_tool("describe_and_fetch_result", arguments=args)
+    data = result.structured_content or {}
+    if not isinstance(data, dict):
+        raise RuntimeError(
+            f"Unexpected structured_content from describe_and_fetch_result: {data}"
+        )
     return data
 
 

@@ -9,7 +9,7 @@
     <version>0.1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>MultiModal MCP (root)</name>
-    <description>Monorepo: vendored MCP Java SDK + Java server; Python server kept separately.</description>
+    <description>TransForm: vendored MCP Java SDK + Java server.</description>
 
     <modules>
         <module>java-sdk</module>

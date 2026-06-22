@@ -126,6 +126,10 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <!-- Apache Arrow requires reflective access to java.nio on JDK 17+ -->
+                    <jvmArguments>--add-opens=java.base/java.nio=ALL-UNNAMED</jvmArguments>
+                </configuration>
             </plugin>
         </plugins>
     </build>

@@ -1,0 +1,44 @@
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "fontSize": "22px",
+    "fontFamily": "Helvetica, Arial, sans-serif",
+    "noteBkgColor": "#f8f8f8",
+    "noteTextColor": "#333333",
+    "actorBkg": "#fff8e6",
+    "actorBorder": "#b8860b",
+    "actorTextColor": "#222222",
+    "signalColor": "#333333",
+    "signalTextColor": "#222222",
+    "activationBkgColor": "#dde8ff",
+    "activationBorderColor": "#4466aa",
+    "sequenceNumberColor": "#ffffff"
+  },
+  "sequence": { "mirrorActors": false, "showSequenceNumbers": true }
+}}%%
+sequenceDiagram
+    autonumber
+
+    box Client
+        participant C as MCP client
+    end
+
+    box Server
+        participant MCP as MCP control plane
+        participant HTTP as HTTP data plane
+    end
+
+    Note over C,HTTP: (b) TransForm — 1 MCP round trip
+
+    rect rgb(232, 245, 233)
+        Note over C,HTTP: MCP RTT 1 — hint, select, deliver
+        C->>MCP: fused call
+        MCP->>MCP: hint + select + encode
+        alt small result
+            MCP-->>C: inline JSON
+        else large columnar result
+            MCP-->>C: descriptor + URL
+            C->>HTTP: GET bytes
+            HTTP-->>C: Parquet / Arrow
+        end
+    end

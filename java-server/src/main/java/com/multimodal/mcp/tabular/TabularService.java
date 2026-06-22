@@ -330,8 +330,13 @@ public class TabularService {
             if (config == null) {
                 throw new IllegalArgumentException("Unknown result_id: " + resultId);
             }
+            Map<String, Object> fromCache = hintsFromCachedPayload(config, rowsPerChunk, comp, encStrat, ipcComp);
+            if (fromCache != null) {
+                return fromCache;
+            }
             TabularData df = resolveDataframe(config, 0, null);
-            return computeTabularSizeHintsFromDf(df, rowsPerChunk, comp, encStrat, ipcComp, null);
+            VectorSchemaRoot table = config.getCachedArrowTable();
+            return computeTabularSizeHintsFromDf(df, rowsPerChunk, comp, encStrat, ipcComp, table);
         }
 
         int jsonBytes = getJsonByteSize(nRows, nCols);
@@ -562,6 +567,62 @@ public class TabularService {
         }
         int perRecord = perRecordOverhead + recordValueBytes;
         return 2 + nRows * perRecord + Math.max(0, nRows - 1);
+    }
+
+    /**
+     * When F7 payload caches are primed at registration, reuse encoded byte
+     * lengths instead of re-encoding Parquet/IPC on every describe/auto call.
+     */
+    private Map<String, Object> hintsFromCachedPayload(
+            ResultConfig config,
+            int rowsPerChunk,
+            String comp,
+            String encStrat,
+            String ipcComp) throws IOException {
+        byte[] pq = config.getCachedParquetBlobBytes();
+        byte[] ipc = config.getCachedArrowIpcBlobBytes();
+        ResultConfig.ParquetCodec pqCodec = config.getCachedParquetCodec();
+        String ipcCodec = config.getCachedArrowIpcCodec();
+        if (pq == null || ipc == null || pqCodec == null) {
+            return null;
+        }
+        if (!comp.equals(pqCodec.compression()) || !encStrat.equals(pqCodec.encodingStrategy())) {
+            return null;
+        }
+        if (ipcCodec != null && !ipcComp.equals(ipcCodec)) {
+            return null;
+        }
+        int nRows = config.getNRows();
+        int nCols = config.getNCols();
+        int jsonBytes;
+        if (config.getCachedJsonBytes() != null) {
+            jsonBytes = config.getCachedJsonBytes();
+        } else if (config.getCachedDataframe() != null) {
+            jsonBytes = measureJsonBytesFromDf(config.getCachedDataframe());
+        } else {
+            return null;
+        }
+        if (formatHintsSkipLargeForSmall() && jsonBytes <= jsonObviousWinnerBytes()) {
+            long sentinel = Math.max(jsonBytes * 64L, 1L << 30);
+            return smallPayloadHints(nRows, nCols, jsonBytes, sentinel);
+        }
+        int firstChunkRows = Math.min(rowsPerChunk, Math.max(1, nRows));
+        byte[] parquetChunk;
+        byte[] arrowChunk;
+        if (config.getCachedDataframe() != null && firstChunkRows > 0) {
+            TabularData slice = config.getCachedDataframe().slice(0, firstChunkRows);
+            VectorSchemaRoot chunkTable = ArrowParquetSupport.toArrowTable(slice, allocator);
+            try {
+                parquetChunk = encodeParquet(chunkTable, comp, encStrat);
+                arrowChunk = encodeArrowIpcFile(chunkTable, ipcComp);
+            } finally {
+                chunkTable.close();
+            }
+        } else {
+            parquetChunk = pq;
+            arrowChunk = ipc;
+        }
+        return fullPayloadHints(nRows, nCols, jsonBytes, pq, ipc, parquetChunk, arrowChunk);
     }
 
     private Map<String, Object> smallPayloadHints(int nRows, int nCols, int jsonBytes, long sentinel) {
@@ -816,14 +877,37 @@ public class TabularService {
         }
 
         static byte[] writeParquet(VectorSchemaRoot table, BufferAllocator allocator) throws IOException {
-            Path temp = Files.createTempFile("mmcp-parquet-", ".parquet");
-            String uri = temp.toUri().toString();
+            Path tempDir = Files.createTempDirectory("mmcp-parquet-");
+            String uri = tempDir.toUri().toString();
+            if (!uri.endsWith("/")) {
+                uri = uri + "/";
+            }
             try (SingleBatchArrowReader reader = new SingleBatchArrowReader(table, allocator)) {
                 DatasetFileWriter.write(allocator, reader, FileFormat.PARQUET, uri);
-                return Files.readAllBytes(temp);
+                try (var files = Files.list(tempDir)) {
+                    List<Path> produced = files.filter(Files::isRegularFile).toList();
+                    if (produced.isEmpty()) {
+                        throw new IOException("Parquet writer produced no files in " + tempDir);
+                    }
+                    return Files.readAllBytes(produced.getFirst());
+                }
             } finally {
-                Files.deleteIfExists(temp);
+                deleteRecursively(tempDir);
             }
+        }
+
+        private static void deleteRecursively(Path path) throws IOException {
+            if (!Files.exists(path)) {
+                return;
+            }
+            if (Files.isDirectory(path)) {
+                try (var entries = Files.list(path)) {
+                    for (Path child : entries.toList()) {
+                        deleteRecursively(child);
+                    }
+                }
+            }
+            Files.deleteIfExists(path);
         }
 
         static byte[] writeArrowIpc(VectorSchemaRoot table, String ipcCompression) throws IOException {

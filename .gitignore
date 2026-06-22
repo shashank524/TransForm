@@ -1,31 +1,82 @@
+# --- Python server / vendored SDK (not in repo) ---
+python-sdk/
+server_app.py
+server/
+format_selector.py
+codec_selector.py
+format_mab.py
+hint_reference_table.py
+Dockerfile
+docker-compose.yml
+environment.yml
+
+# --- OS / editor ---
+.DS_Store
+.idea/
+.vscode/
+.cursor/
+*.swp
+
+# --- Python ---
 .venv/
 __pycache__/
 *.pyc
 *.pyo
-.DS_Store
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 
-# Datasets / large inputs
-data/datasets/
-data/materialized/
-data/materialized_raw/
-data/raw/
-data/*.parquet
+# --- Java ---
+**/target/
+java-server/bin/
+java-server/results/
+*.class
+*.iml
+.classpath
+.project
+.settings/
+
+# --- Datasets / large local inputs ---
+data/
+dev.zip
 *.zip
 *.parquet
 
-# Generated benchmark artifacts (parquet blobs and large profiles)
+# --- Benchmarks, plots, profiling (not part of artifact) ---
+results/
+bench*.py
+plot_*.py
+summarize_*.py
+profile_*.py
+run_workflow.py
+verify_smoke.py
+
+# --- Docs / drafts / alternate paper trees ---
+OverleafProject/
+papers/
+docs/
+scripts/
+*.md
+!README.md
+
+# --- Vendored SDK noise (runtime needs src + build metadata only) ---
+java-sdk/conformance-tests/
+java-sdk/mcp-test/
+java-sdk/docs/
+java-sdk/.github/
+
+# --- LaTeX build artifacts (novas-workshop/) ---
+novas-workshop/*.aux
+novas-workshop/*.bbl
+novas-workshop/*.blg
+novas-workshop/*.fdb_latexmk
+novas-workshop/*.fls
+novas-workshop/*.log
+novas-workshop/*.out
+novas-workshop/*.pdf
+novas-workshop/*.synctex.gz
+
+# --- Generated runtime state ---
 results/format_mab_state.json
 results/format_selection_history.jsonl
-results/materialized/
-results/profiling/**/*.html
-results/profiling/**/*.speedscope.json
 results/format_hints.sqlite*
-
-# Editor / OS noise
-.idea/
-.vscode/
-*.swp
-
-# Java build output
-java-server/target/
-java-sdk/**/target/

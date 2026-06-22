@@ -156,6 +156,21 @@ public class McpToolRegistry {
                 List.of("n_rows", "n_cols")),
                 args -> handleLargeResultAuto(args)));
 
+        specs.add(tool("describe_and_fetch_result",
+                "Fused enhanced workflow: format hints + heuristic selection + payload in one MCP call "
+                        + "(same semantics as large_result_auto; eliminates the separate describe round trip).",
+                objectSchema(
+                        Map.of(
+                                "n_rows", integerProp("Number of rows"),
+                                "n_cols", integerProp("Number of columns"),
+                                "rows_per_chunk", integerProp("Rows per chunk"),
+                                "result_id", stringProp("Optional materialized result id"),
+                                "optimization_target", stringProp("Optimization target"),
+                                "prefer_streaming", booleanProp("Prefer streaming formats"),
+                                "use_mab", booleanProp("Use MAB for selection")),
+                        List.of("n_rows", "n_cols")),
+                args -> handleDescribeAndFetchResult(args)));
+
         specs.add(tool("record_format_outcome", "Update server-side MAB state.", objectSchema(
                 Map.of(
                         "n_rows", integerProp("Number of rows"),
@@ -252,8 +267,7 @@ public class McpToolRegistry {
             }
             if (config.getCachedJsonRecords() != null) {
                 payloadCache.touch(resultId);
-                Map<String, Object> structured = Map.of("records", config.getCachedJsonRecords());
-                return toolResult("Returning cached JSON records.", structured);
+                return toolResult("Returning cached JSON records.", Map.of("result", config.getCachedJsonRecords()));
             }
             TabularData df = tabularService.resolveDataframe(config, 0, null);
             int cells = df.numRows() * df.numCols();
@@ -261,13 +275,13 @@ public class McpToolRegistry {
             if (cap != null && cells > cap) {
                 throw new IllegalArgumentException("Result too large for JSON (" + cells + " cells > " + cap + ")");
             }
-            return toolResult("Returning JSON records.", Map.of("records", df.toRecords()));
+            return toolResult("Returning JSON records.", Map.of("result", df.toRecords()));
         }
 
         int nRows = intArg(args, "n_rows", 0);
         int nCols = intArg(args, "n_cols", 0);
         TabularData df = tabularService.generateDataframe(nRows, nCols, 0);
-        return toolResult("Returning generated JSON records.", Map.of("records", df.toRecords()));
+        return toolResult("Returning generated JSON records.", Map.of("result", df.toRecords()));
     }
 
     private CallToolResult handleLargeParquetBlob(Map<String, Object> args) throws IOException {
@@ -294,12 +308,20 @@ public class McpToolRegistry {
             materializedPath = src.getMaterializedPath();
         }
 
-        String newId = UUID.randomUUID().toString();
-        ResultConfig cfg = new ResultConfig(nRows, nCols);
+        String newId = sourceId != null ? sourceId : UUID.randomUUID().toString();
+        ResultConfig cfg;
+        if (sourceId != null) {
+            cfg = runtimeState.getResultRegistry().get(sourceId);
+            if (cfg == null) {
+                throw new IllegalArgumentException("Unknown result_id: " + sourceId);
+            }
+        } else {
+            cfg = new ResultConfig(nRows, nCols);
+            cfg.setMaterializedPath(materializedPath);
+            runtimeState.getResultRegistry().put(newId, cfg);
+        }
         cfg.setCompression(comp);
         cfg.setEncodingStrategy(encStrat);
-        cfg.setMaterializedPath(materializedPath);
-        runtimeState.getResultRegistry().put(newId, cfg);
 
         Map<String, Object> descriptor = new LinkedHashMap<>();
         descriptor.put("mode", "parquet_blob");
@@ -345,13 +367,21 @@ public class McpToolRegistry {
             materializedPath = src.getMaterializedPath();
         }
 
-        String newId = UUID.randomUUID().toString();
-        ResultConfig cfg = new ResultConfig(nRows, nCols);
+        String newId = sourceId != null ? sourceId : UUID.randomUUID().toString();
+        ResultConfig cfg;
+        if (sourceId != null) {
+            cfg = runtimeState.getResultRegistry().get(sourceId);
+            if (cfg == null) {
+                throw new IllegalArgumentException("Unknown result_id: " + sourceId);
+            }
+        } else {
+            cfg = new ResultConfig(nRows, nCols);
+            cfg.setMaterializedPath(materializedPath);
+            runtimeState.getResultRegistry().put(newId, cfg);
+        }
         cfg.setRowsPerChunk(rowsPerChunk);
         cfg.setCompression(comp);
         cfg.setEncodingStrategy(encStrat);
-        cfg.setMaterializedPath(materializedPath);
-        runtimeState.getResultRegistry().put(newId, cfg);
 
         Map<String, Object> descriptor = new LinkedHashMap<>();
         descriptor.put("mode", "parquet_stream");
@@ -389,11 +419,19 @@ public class McpToolRegistry {
             materializedPath = src.getMaterializedPath();
         }
 
-        String newId = UUID.randomUUID().toString();
-        ResultConfig cfg = new ResultConfig(nRows, nCols);
+        String newId = sourceId != null ? sourceId : UUID.randomUUID().toString();
+        ResultConfig cfg;
+        if (sourceId != null) {
+            cfg = runtimeState.getResultRegistry().get(sourceId);
+            if (cfg == null) {
+                throw new IllegalArgumentException("Unknown result_id: " + sourceId);
+            }
+        } else {
+            cfg = new ResultConfig(nRows, nCols);
+            cfg.setMaterializedPath(materializedPath);
+            runtimeState.getResultRegistry().put(newId, cfg);
+        }
         cfg.setIpcCompression(ipcComp);
-        cfg.setMaterializedPath(materializedPath);
-        runtimeState.getResultRegistry().put(newId, cfg);
 
         Map<String, Object> descriptor = new LinkedHashMap<>();
         descriptor.put("mode", "arrow_ipc_blob");
@@ -434,12 +472,20 @@ public class McpToolRegistry {
             materializedPath = src.getMaterializedPath();
         }
 
-        String newId = UUID.randomUUID().toString();
-        ResultConfig cfg = new ResultConfig(nRows, nCols);
+        String newId = sourceId != null ? sourceId : UUID.randomUUID().toString();
+        ResultConfig cfg;
+        if (sourceId != null) {
+            cfg = runtimeState.getResultRegistry().get(sourceId);
+            if (cfg == null) {
+                throw new IllegalArgumentException("Unknown result_id: " + sourceId);
+            }
+        } else {
+            cfg = new ResultConfig(nRows, nCols);
+            cfg.setMaterializedPath(materializedPath);
+            runtimeState.getResultRegistry().put(newId, cfg);
+        }
         cfg.setRowsPerChunk(rowsPerChunk);
         cfg.setIpcCompression(ipcComp);
-        cfg.setMaterializedPath(materializedPath);
-        runtimeState.getResultRegistry().put(newId, cfg);
 
         Map<String, Object> descriptor = new LinkedHashMap<>();
         descriptor.put("mode", "arrow_ipc_stream");
@@ -495,6 +541,10 @@ public class McpToolRegistry {
         return toolResult("Format hints for tabular payload.", structured);
     }
 
+    private CallToolResult handleDescribeAndFetchResult(Map<String, Object> args) throws Exception {
+        return handleLargeResultAuto(args);
+    }
+
     private CallToolResult handleLargeResultAuto(Map<String, Object> args) throws Exception {
         int nRows = intArg(args, "n_rows", 0);
         int nCols = intArg(args, "n_cols", 0);
@@ -524,16 +574,29 @@ public class McpToolRegistry {
         Map<String, Object> hintsForSelect = tabularHintsForSelect(hints);
         FormatName chosen = chooseFormat(selCtx, hintsForSelect, useMab);
 
+        return deliverChosenFormat(
+                chosen, resolvedRows, resolvedCols, rowsPerChunk, resultId,
+                selTarget, comp, encStrat, ipcComp);
+    }
+
+    /**
+     * Deliver the chosen tabular format (inline JSON or HTTP descriptor). Shared by
+     * large_result_auto, describe_and_fetch_result, and bird_query_run_inline so we
+     * do not re-run hint computation or allocate a second result_id.
+     */
+    private CallToolResult deliverChosenFormat(
+            FormatName chosen,
+            int resolvedRows,
+            int resolvedCols,
+            int rowsPerChunk,
+            String resultId,
+            OptimizationTarget selTarget,
+            String comp,
+            String encStrat,
+            String ipcComp) throws Exception {
         if (chosen == FormatName.JSON) {
             try {
-                CallToolResult jsonResult = handleLargeJson(Map.of(
-                        "n_rows", resolvedRows,
-                        "n_cols", resolvedCols,
-                        "result_id", resultId));
-                @SuppressWarnings("unchecked")
-                Map<String, Object> jsonStructured = (Map<String, Object>) jsonResult.structuredContent();
-                @SuppressWarnings("unchecked")
-                List<Map<String, Object>> records = (List<Map<String, Object>>) jsonStructured.get("records");
+                List<Map<String, Object>> records = resolveJsonRecords(resultId, resolvedRows, resolvedCols);
                 Map<String, Object> structured = new LinkedHashMap<>();
                 structured.put("payload_kind", "tabular");
                 structured.put("chosen_format", "json");
@@ -607,7 +670,7 @@ public class McpToolRegistry {
     private CallToolResult handleBirdQueryJson(Map<String, Object> args) throws SQLException {
         List<Map<String, Object>> records = birdQueryService.queryJson(
                 strArg(args, "db_id"), strArg(args, "sql"), intArg(args, "max_rows", 500_000));
-        return toolResult("BIRD query returned " + records.size() + " records.", Map.of("records", records));
+        return toolResult("BIRD query returned " + records.size() + " records.", Map.of("result", records));
     }
 
     private CallToolResult handleBirdQueryMaterialize(Map<String, Object> args) throws Exception {
@@ -701,14 +764,9 @@ public class McpToolRegistry {
         }
         runtimeState.getResultRegistry().put(mid, cfg);
 
-        return handleLargeResultAuto(Map.of(
-                "n_rows", resolvedRows,
-                "n_cols", resolvedCols,
-                "rows_per_chunk", rowsPerChunk,
-                "result_id", mid,
-                "optimization_target", selTarget.value(),
-                "prefer_streaming", preferStreaming,
-                "use_mab", useMab));
+        return deliverChosenFormat(
+                chosen, resolvedRows, resolvedCols, rowsPerChunk, mid,
+                selTarget, comp, encStrat, ipcComp);
     }
 
     private CallToolResult handleValidateFile(Map<String, Object> args) {
@@ -956,10 +1014,14 @@ public class McpToolRegistry {
     }
 
     private static CallToolResult toolResult(String text, Map<String, Object> structured) {
+        return toolResult(text, (Object) structured, null);
+    }
+
+    private static CallToolResult toolResult(String text, Object structured) {
         return toolResult(text, structured, null);
     }
 
-    private static CallToolResult toolResult(String text, Map<String, Object> structured, Map<String, Object> meta) {
+    private static CallToolResult toolResult(String text, Object structured, Map<String, Object> meta) {
         CallToolResult.Builder builder = CallToolResult.builder()
                 .content(List.of(new TextContent(null, text)))
                 .structuredContent(structured);
@@ -967,6 +1029,46 @@ public class McpToolRegistry {
             builder.meta(meta);
         }
         return builder.build();
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<Map<String, Object>> resolveJsonRecords(
+            String resultId, int resolvedRows, int resolvedCols) throws IOException {
+        if (resultId != null) {
+            ResultConfig config = runtimeState.getResultRegistry().get(resultId);
+            if (config == null) {
+                throw new IllegalArgumentException("Unknown result_id: " + resultId);
+            }
+            if (config.getCachedJsonRecords() != null) {
+                payloadCache.touch(resultId);
+                return config.getCachedJsonRecords();
+            }
+            TabularData df = tabularService.resolveDataframe(config, 0, null);
+            int cells = df.numRows() * df.numCols();
+            Integer cap = runtimeState.jsonCellsCap();
+            if (cap != null && cells > cap) {
+                throw new IllegalArgumentException(
+                        "Result too large for JSON (" + cells + " cells > " + cap + ")");
+            }
+            return df.toRecords();
+        }
+        TabularData df = tabularService.generateDataframe(resolvedRows, resolvedCols, 0);
+        return df.toRecords();
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<Map<String, Object>> jsonRecords(Object structuredContent) {
+        Object unwrapped = structuredContent;
+        if (unwrapped instanceof Map<?, ?> map && map.containsKey("result")) {
+            unwrapped = map.get("result");
+        }
+        if (unwrapped instanceof List<?> list) {
+            return (List<Map<String, Object>>) list;
+        }
+        if (unwrapped instanceof Map<?, ?> map && map.get("records") instanceof List<?> records) {
+            return (List<Map<String, Object>>) records;
+        }
+        throw new IllegalStateException("Unexpected JSON tool structured content: " + unwrapped);
     }
 
     private static JsonSchema objectSchema(Map<String, Object> properties, List<String> required) {
