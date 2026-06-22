@@ -41,7 +41,3 @@ cd novas-workshop && latexmk -pdf main.tex
 ```
 
 Figures are in `novas-workshop/figures/`. Regenerate selection diagrams with `figures/render_selection_figures.sh` (requires [mermaid-cli](https://github.com/mermaid-js/mermaid-cli)).
-
-## Citation
-
-Shashank Mukkera and Chunwei Liu. *TransForm: Dynamic Format Selection for MCP Tool Outputs in Agentic Data Systems.* VLDB 2026 Workshop: NOVAS.
